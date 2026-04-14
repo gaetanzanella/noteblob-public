@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  XCODE_VERSION: "26.2"
+
+jobs:
+  build-ios:
+    name: Build (iOS)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_$XCODE_VERSION.app
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -scheme NoteBlob \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.2' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO
+
+  build-macos:
+    name: Build (macOS)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_$XCODE_VERSION.app
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -scheme NoteBlob \
+            -destination 'platform=macOS' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO
+
+  test-packages:
+    name: Test Packages
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_$XCODE_VERSION.app
+
+      - name: Test NoteBlobKit
+        run: swift test --package-path Packages/NoteBlobKit
+
+      - name: Test NoteBlobUI
+        run: swift test --package-path Packages/NoteBlobUI
+
+      - name: Test TextEditorKit
+        run: swift test --package-path Packages/TextEditorKit
+
+      - name: Test SearchIndexKit
+        run: swift test --package-path Packages/SearchIndexKit
+
+      - name: Test MCPServerKit
+        run: swift test --package-path Packages/MCPServerKit
