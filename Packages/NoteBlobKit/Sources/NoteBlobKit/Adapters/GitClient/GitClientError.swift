@@ -5,6 +5,7 @@ enum GitClientError: Error, LocalizedError, Equatable {
     case apiError(statusCode: Int, message: String)
     case missingMetadata
     case conflict
+    case authenticationFailed
 
     var errorDescription: String? {
         switch self {
@@ -16,6 +17,8 @@ enum GitClientError: Error, LocalizedError, Equatable {
             return "Local repository metadata not found"
         case .conflict:
             return "Merge conflict detected. Resolve conflicts before continuing."
+        case .authenticationFailed:
+            return "Authentication failed. Please sign in again."
         }
     }
 }

@@ -7,6 +7,7 @@ private enum AccountLinks {
     static let contact = URL(string: "mailto:rectangle-cornees.2c@icloud.com")!
     static let contributing = URL(string: "https://github.com/gaetanzanella/noteblob-public")!
     static let reportIssue = URL(string: "https://github.com/gaetanzanella/noteblob-public/issues")!
+    static let appleNotesExporter = URL(string: "https://github.com/KrauseFx/notes-exporter")!
 }
 
 public struct AccountView: View {
@@ -26,113 +27,83 @@ public struct AccountView: View {
         #endif
     }
 
+    // MARK: - Shared Sections
+
+    @ViewBuilder
+    private func accountSections(viewModel: AccountViewModel) -> some View {
+        if viewModel.isAuthenticated {
+            Section {
+                Button {
+                    presenter.on(.logout)
+                } label: {
+                    Label(String.localized("account.clear_token"), systemImage: "person.badge.minus")
+                }
+                .tint(.red)
+            } footer: {
+                Text("account.authenticated.description", bundle: .module)
+            }
+        }
+
+        Section {
+            Link(destination: AccountLinks.contact) {
+                Label(String.localized("account.contact.email"), systemImage: "envelope")
+            }
+        } header: {
+            Text("account.contact.title", bundle: .module)
+        }
+
+        Section {
+            Link(destination: AccountLinks.contributing) {
+                Label(String.localized("account.contributing.github"), systemImage: "curlybraces")
+            }
+            Link(destination: AccountLinks.reportIssue) {
+                Label(String.localized("account.contributing.report_issue"), systemImage: "exclamationmark.bubble")
+            }
+        } header: {
+            Text("account.contributing.title", bundle: .module)
+        }
+
+        Section {
+            Link(destination: AccountLinks.appleNotesExporter) {
+                Label(String.localized("account.import.apple_notes"), systemImage: "square.and.arrow.down")
+            }
+        } header: {
+            Text("account.import.title", bundle: .module)
+        }
+    }
+
+    // MARK: - macOS
+
     #if os(macOS)
     private func macOSBody() -> some View {
         let viewModel = presenter.viewModel()
-        return VStack(spacing: 16) {
-            Text("account.title", bundle: .module)
-                .font(.headline)
-
-            Spacer()
-
-            if viewModel.isAuthenticated {
-                VStack(spacing: 12) {
-                    Button(role: .destructive) {
-                        presenter.on(.logout)
-                    } label: {
-                        Text("account.clear_token", bundle: .module)
-                    }
-                    Text("account.authenticated.description", bundle: .module)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-            } else {
-                ContentUnavailableView(
-                    String.localized("account.empty.title"),
-                    systemImage: "person.crop.circle",
-                    description: Text("account.empty.description", bundle: .module)
-                )
-            }
-
-            Divider()
-
-            #if os(macOS)
+        return Form {
+            accountSections(viewModel: viewModel)
             MCPServerSection(presenter: presenter)
-            #endif
-
-            Divider()
-
-            Section {
-                Link(destination: AccountLinks.contact) {
-                    Label(String.localized("account.contact.email"), systemImage: "envelope")
-                }
-            } header: {
-                Text("account.contact.title", bundle: .module)
-            }
-
-            Divider()
-
-            Section {
-                Link(destination: AccountLinks.contributing) {
-                    Label(String.localized("account.contributing.github"), systemImage: "curlybraces")
-                }
-                Link(destination: AccountLinks.reportIssue) {
-                    Label(String.localized("account.contributing.report_issue"), systemImage: "exclamationmark.bubble")
-                }
-            } header: {
-                Text("account.contributing.title", bundle: .module)
-            }
-
-            Spacer()
-
-            HStack {
-                Spacer()
+        }
+        .formStyle(.grouped)
+        .navigationTitle(Text("account.title", bundle: .module))
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
                 Button { dismiss() } label: {
                     Text("common.done", bundle: .module)
                 }
                 .keyboardShortcut(.cancelAction)
             }
         }
-        .scenePadding()
-        .frame(minWidth: 300, minHeight: 200)
+        .frame(minWidth: 450, minHeight: 400, idealHeight: 500)
         .task { await presenter.onAsync(.onAppear) }
     }
     #endif
+
+    // MARK: - iOS
 
     #if os(iOS)
     private func iOSBody() -> some View {
         let viewModel = presenter.viewModel()
         return NavigationStack {
             Form {
-                if viewModel.isAuthenticated {
-                    Section {
-                        Button(role: .destructive) {
-                            presenter.on(.logout)
-                        } label: {
-                            Text("account.clear_token", bundle: .module)
-                        }
-                    } footer: {
-                        Text("account.authenticated.description", bundle: .module)
-                    }
-                }
-                Section {
-                    Link(destination: AccountLinks.contact) {
-                        Label(String.localized("account.contact.email"), systemImage: "envelope")
-                    }
-                } header: {
-                    Text("account.contact.title", bundle: .module)
-                }
-                Section {
-                    Link(destination: AccountLinks.contributing) {
-                        Label(String.localized("account.contributing.github"), systemImage: "curlybraces")
-                    }
-                    Link(destination: AccountLinks.reportIssue) {
-                        Label(String.localized("account.contributing.report_issue"), systemImage: "exclamationmark.bubble")
-                    }
-                } header: {
-                    Text("account.contributing.title", bundle: .module)
-                }
+                accountSections(viewModel: viewModel)
             }
             .navigationTitle(Text("account.title", bundle: .module))
             .navigationBarTitleDisplayMode(.inline)
@@ -206,13 +177,14 @@ private struct StatusBadge: View {
     let status: MCPServerStatus
 
     var body: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
+        Label {
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        } icon: {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
         }
     }
 

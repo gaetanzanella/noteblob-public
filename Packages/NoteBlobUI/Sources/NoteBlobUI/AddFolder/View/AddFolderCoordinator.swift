@@ -62,11 +62,14 @@ public struct AddFolderCoordinator: View {
         .sheet(isPresented: $isShowingAuth) {
             NavigationStack {
                 AuthView(
-                    presenter: presenterFactory.makeAuthPresenter { redirection in
+                    presenter: presenterFactory.makeAuthPresenter(
+                        payload: AuthenticateNavigationPayload(onAuthenticated: {
+                            currentPage = .github
+                        })
+                    ) { redirection in
                         switch redirection {
                         case .authenticated:
                             isShowingAuth = false
-                            currentPage = .github
                         }
                     }
                 )

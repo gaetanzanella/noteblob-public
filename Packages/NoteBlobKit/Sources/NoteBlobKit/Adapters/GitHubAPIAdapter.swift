@@ -132,8 +132,12 @@ final class GitHubAPIAdapter: RepositoryAdapter, @unchecked Sendable {
         switch error {
         case .conflict:
             .conflict
+        case .authenticationFailed:
+            .notAuthenticated
         case .commandFailed(_, let output):
             .syncFailed(output)
+        case .apiError(401, _):
+            .notAuthenticated
         case .apiError(_, let message):
             .syncFailed(message)
         case .missingMetadata:

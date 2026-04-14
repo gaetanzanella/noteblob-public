@@ -3,6 +3,15 @@ import NoteBlobKit
 
 // MARK: - Navigation
 
+public struct AuthenticateNavigationPayload: Identifiable {
+    public let id = UUID()
+    public let onAuthenticated: @MainActor () -> Void
+
+    public init(onAuthenticated: @escaping @MainActor () -> Void) {
+        self.onAuthenticated = onAuthenticated
+    }
+}
+
 public enum AuthViewAction {
     case editToken(String)
     case login
@@ -37,12 +46,15 @@ public final class AuthPresenter {
 
     private var state = AuthState()
     private let authService: AuthService
+    private let payload: AuthenticateNavigationPayload
     private let onRedirection: (AuthRedirection) -> Void
 
     public init(
+        payload: AuthenticateNavigationPayload,
         authService: AuthService,
         onRedirection: @escaping (AuthRedirection) -> Void
     ) {
+        self.payload = payload
         self.authService = authService
         self.onRedirection = onRedirection
     }
@@ -71,6 +83,7 @@ public final class AuthPresenter {
         do {
             _ = try await authService.login(token: state.token)
             state.token = ""
+            payload.onAuthenticated()
             onRedirection(.authenticated)
         } catch {
             state.errorMessage = error.localizedDescription

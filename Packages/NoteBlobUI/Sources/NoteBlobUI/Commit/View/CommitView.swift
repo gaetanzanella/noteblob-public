@@ -30,10 +30,19 @@ public struct CommitView: View {
                 .padding(.bottom, 12)
 
             if let errorMessage = vm.errorMessage {
-                Text(errorMessage)
-                    .foregroundStyle(.red)
-                    .font(.callout)
-                    .padding(.bottom, 8)
+                HStack {
+                    Text(errorMessage)
+                        .foregroundStyle(.red)
+                        .font(.callout)
+                    if vm.needsAuth {
+                        Button { presenter.on(.signIn) } label: {
+                            Text("auth.sign_in", bundle: .module)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                    }
+                }
+                .padding(.bottom, 8)
             }
 
             Group {
@@ -238,6 +247,11 @@ public struct CommitView: View {
                 Section {
                     Text(errorMessage)
                         .foregroundStyle(.red)
+                    if vm.needsAuth {
+                        Button { presenter.on(.signIn) } label: {
+                            Text("auth.sign_in", bundle: .module)
+                        }
+                    }
                 }
             }
             switch vm.mode {

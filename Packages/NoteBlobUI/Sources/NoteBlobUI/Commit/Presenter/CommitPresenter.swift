@@ -17,12 +17,14 @@ public enum CommitViewAction {
     case pushAndMerge
     case pull
     case merge
+    case signIn
 }
 
 public enum CommitRedirection {
     case dismiss
     case deselect
     case viewDiff(DiffNavigationPayload)
+    case authenticate(AuthenticateNavigationPayload)
 }
 
 // MARK: - ViewModel
@@ -66,6 +68,7 @@ struct CommitViewModel {
     let isLoading: Bool
     let isGeneratingMessage: Bool
     let errorMessage: String?
+    let needsAuth: Bool
     var canCommit: Bool {
         !commitMessage.trimmingCharacters(in: .whitespaces).isEmpty && !isLoading && !isGeneratingMessage
     }
@@ -83,6 +86,7 @@ private struct CommitState {
     var isLoading = false
     var isGeneratingMessage = false
     var errorMessage: String?
+    var needsAuth = false
 }
 
 // MARK: - Presenter
@@ -130,7 +134,8 @@ public final class CommitPresenter {
             },
             isLoading: state.isLoading,
             isGeneratingMessage: state.isGeneratingMessage,
-            errorMessage: state.errorMessage
+            errorMessage: state.errorMessage,
+            needsAuth: state.needsAuth
         )
     }
 
@@ -175,6 +180,12 @@ public final class CommitPresenter {
             Task { await pull() }
         case .merge:
             Task { await merge() }
+        case .signIn:
+            onRedirection(.authenticate(AuthenticateNavigationPayload(
+                onAuthenticated: { [weak self] in
+                    self?.on(.load)
+                }
+            )))
         }
     }
 
@@ -198,8 +209,17 @@ public final class CommitPresenter {
         }
     }
 
+    private func handleError(_ error: Error) {
+        if let noteBlobError = error as? NoteBlobError, case .notAuthenticated = noteBlobError {
+            state.needsAuth = true
+        }
+        state.errorMessage = ErrorMapper.errorDescription(for: error)
+    }
+
     private func load() async {
         state.isLoading = true
+        state.errorMessage = nil
+        state.needsAuth = false
         state.syncStatus = nil
         state.changes = []
         state.commitLog = []
@@ -216,7 +236,7 @@ public final class CommitPresenter {
                 break
             }
         } catch {
-            state.errorMessage = error.localizedDescription
+            handleError(error)
         }
         state.isLoading = false
 
@@ -232,7 +252,7 @@ public final class CommitPresenter {
             let message = try await aiAssistantService.generateCommitMessage(for: state.changes)
             state.commitMessage = message
         } catch {
-            state.errorMessage = error.localizedDescription
+            state.commitMessage = ""
         }
         state.isGeneratingMessage = false
     }
@@ -240,18 +260,20 @@ public final class CommitPresenter {
     private func discard() async {
         state.isLoading = true
         state.errorMessage = nil
+        state.needsAuth = false
         do {
             try await folderSyncService.discardChanges(in: state.payload.folder)
             state.isLoading = false
             onRedirection(.dismiss)
         } catch {
-            state.errorMessage = error.localizedDescription
+            handleError(error)
             state.isLoading = false
         }
     }
 
     private func discardFile(_ path: String) async {
         state.errorMessage = nil
+        state.needsAuth = false
         do {
             try await folderSyncService.discardChange(in: state.payload.folder, at: RelativePath(path))
             state.changes.removeAll { $0.path == path }
@@ -259,7 +281,7 @@ public final class CommitPresenter {
                 onRedirection(.dismiss)
             }
         } catch {
-            state.errorMessage = error.localizedDescription
+            handleError(error)
         }
     }
 
@@ -267,6 +289,7 @@ public final class CommitPresenter {
         guard !state.commitMessage.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         state.isLoading = true
         state.errorMessage = nil
+        state.needsAuth = false
         do {
             try await folderSyncService.commit(
                 in: state.payload.folder,
@@ -275,7 +298,7 @@ public final class CommitPresenter {
             state.isLoading = false
             onRedirection(.dismiss)
         } catch {
-            state.errorMessage = error.localizedDescription
+            handleError(error)
             state.isLoading = false
         }
     }
@@ -284,6 +307,7 @@ public final class CommitPresenter {
         guard !state.commitMessage.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         state.isLoading = true
         state.errorMessage = nil
+        state.needsAuth = false
         do {
             try await folderSyncService.commitAndPush(
                 in: state.payload.folder,
@@ -292,7 +316,7 @@ public final class CommitPresenter {
             state.isLoading = false
             onRedirection(.dismiss)
         } catch {
-            state.errorMessage = error.localizedDescription
+            handleError(error)
             await load()
         }
     }
@@ -301,6 +325,7 @@ public final class CommitPresenter {
         guard !state.commitMessage.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         state.isLoading = true
         state.errorMessage = nil
+        state.needsAuth = false
         do {
             try await folderSyncService.commitPushAndMerge(
                 in: state.payload.folder,
@@ -309,7 +334,7 @@ public final class CommitPresenter {
             state.isLoading = false
             onRedirection(.dismiss)
         } catch {
-            state.errorMessage = error.localizedDescription
+            handleError(error)
             await load()
         }
     }
@@ -317,12 +342,13 @@ public final class CommitPresenter {
     private func push() async {
         state.isLoading = true
         state.errorMessage = nil
+        state.needsAuth = false
         do {
             try await folderSyncService.push(state.payload.folder)
             state.isLoading = false
             onRedirection(.dismiss)
         } catch {
-            state.errorMessage = error.localizedDescription
+            handleError(error)
             state.isLoading = false
         }
     }
@@ -330,12 +356,13 @@ public final class CommitPresenter {
     private func pushAndMerge() async {
         state.isLoading = true
         state.errorMessage = nil
+        state.needsAuth = false
         do {
             try await folderSyncService.pushAndMerge(state.payload.folder)
             state.isLoading = false
             onRedirection(.dismiss)
         } catch {
-            state.errorMessage = error.localizedDescription
+            handleError(error)
             await load()
         }
     }
@@ -343,12 +370,13 @@ public final class CommitPresenter {
     private func pull() async {
         state.isLoading = true
         state.errorMessage = nil
+        state.needsAuth = false
         do {
             try await folderSyncService.pull(state.payload.folder)
             state.isLoading = false
             onRedirection(.dismiss)
         } catch {
-            state.errorMessage = error.localizedDescription
+            handleError(error)
             state.isLoading = false
         }
     }
@@ -356,12 +384,13 @@ public final class CommitPresenter {
     private func merge() async {
         state.isLoading = true
         state.errorMessage = nil
+        state.needsAuth = false
         do {
             try await folderSyncService.merge(state.payload.folder)
             state.isLoading = false
             onRedirection(.dismiss)
         } catch {
-            state.errorMessage = error.localizedDescription
+            handleError(error)
             state.isLoading = false
         }
     }

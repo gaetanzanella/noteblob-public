@@ -23,9 +23,11 @@ public final class PresenterFactory {
     }
 
     public func makeAuthPresenter(
+        payload: AuthenticateNavigationPayload,
         onRedirection: @escaping (AuthRedirection) -> Void
     ) -> AuthPresenter {
         AuthPresenter(
+            payload: payload,
             authService: dependencyProvider.makeAuthService(),
             onRedirection: onRedirection
         )
