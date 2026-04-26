@@ -77,6 +77,11 @@ public final class SyncPresenter {
         do {
             state.errorMessage = nil
             state.syncStatus = try await folderSyncService.status(for: state.folder)
+        } catch is CancellationError {
+            // A mutating op (commit/push/pull/…) invalidated the in-flight
+            // status computation while we awaited it. Don't surface this as
+            // an error — the caller that triggered the mutation will kick
+            // off its own fresh `refreshStatus` right after.
         } catch {
             state.errorMessage = error.localizedDescription
         }

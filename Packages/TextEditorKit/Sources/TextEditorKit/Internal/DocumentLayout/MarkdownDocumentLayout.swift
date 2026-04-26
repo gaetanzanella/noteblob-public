@@ -69,13 +69,8 @@ final class MarkdownDocumentLayout: DocumentLayoutInvalidating {
     }
 
     func inlineTokens(at position: SourcePosition) -> MarkdownInlineToken {
-        blockIndex.inlineTokens(at: position)
-    }
-
-    func inlineRange(at position: SourcePosition, token: MarkdownInlineToken) -> Range<Int>? {
-        guard let columnRange = blockIndex.inlineRange(at: position, token: token) else { return nil }
-        let lineStart = lineIndex.lineStart(at: position.line)
-        return (lineStart + columnRange.lowerBound)..<(lineStart + columnRange.upperBound)
+        guard let utf8Position = utf16PositionToUTF8(position) else { return [] }
+        return blockIndex.inlineTokens(at: utf8Position)
     }
 
     // MARK: - Coordinates
@@ -86,6 +81,18 @@ final class MarkdownDocumentLayout: DocumentLayoutInvalidating {
     func sourcePosition(at offset: Int) -> SourcePosition { lineIndex.sourcePosition(at: offset) }
 
     // MARK: - Private
+
+    /// Converts a SourcePosition whose column is a UTF-16 offset within the line into
+    /// one whose column is a UTF-8 byte offset (expected by swift-markdown).
+    private func utf16PositionToUTF8(_ position: SourcePosition) -> SourcePosition? {
+        let lineText = extractText(fromLine: position.line, toLine: position.line)
+        let utf16 = lineText.utf16
+        guard position.column >= 0, position.column <= utf16.count else { return nil }
+        let utf16Index = utf16.index(utf16.startIndex, offsetBy: position.column)
+        guard let sameIndex = utf16Index.samePosition(in: lineText.utf8) else { return nil }
+        let byteColumn = lineText.utf8.distance(from: lineText.utf8.startIndex, to: sameIndex)
+        return SourcePosition(line: position.line, column: byteColumn)
+    }
 
     private func extractText(fromLine startLine: Int, toLine endLine: Int) -> String {
         guard startLine <= endLine, startLine < lineIndex.lineCount else { return "" }

@@ -7,6 +7,15 @@ public enum DocumentEditorAction: Hashable, Sendable {
     case indent
     case dedent
     case formatDocument
+    case insert(Insertion)
+    case editTable
+    case undo
+    case redo
+
+    public enum Insertion: Hashable, Sendable {
+        case link(target: String, title: String)
+        case table(MarkdownTable)
+    }
 }
 
 // MARK: - Mark

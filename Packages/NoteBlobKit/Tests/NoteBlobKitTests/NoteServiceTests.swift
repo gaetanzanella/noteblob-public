@@ -7,7 +7,7 @@ struct NoteServiceTests {
 
     // MARK: - Helpers
 
-    private let testFolder = Folder(repository: Repository(owner: "test", name: "repo"))
+    private let testFolder = Folder(repository: Repository(owner: "test", name: "repo"), defaultBranch: "main")
 
     private func makeTempDir() throws -> URL {
         let dir = FileManager.default.temporaryDirectory
@@ -315,7 +315,8 @@ private struct NoOpRepositoryAdapter: RepositoryAdapter {
     func switchBranch(to name: String, in folder: Folder) async throws {}
     func deleteBranch(named: String, in folder: Folder) async throws {}
     func fetch(_ folder: Folder) async throws {}
-    func aheadBehind(for folder: Folder) async throws -> (ahead: Int, behind: Int) { (0, 0) }
+    func aheadBehind(for folder: Folder, defaultBranch: String) async throws -> (ahead: Int, behind: Int) { (0, 0) }
+
     func hasUpstream(for folder: Folder) async throws -> Bool { false }
     func discardChanges(in folder: Folder) async throws {}
     func discardChange(in folder: Folder, path: RelativePath) async throws {}
@@ -340,7 +341,8 @@ private struct StubRepositoryAdapter: RepositoryAdapter {
     func switchBranch(to name: String, in folder: Folder) async throws {}
     func deleteBranch(named: String, in folder: Folder) async throws {}
     func fetch(_ folder: Folder) async throws {}
-    func aheadBehind(for folder: Folder) async throws -> (ahead: Int, behind: Int) { (0, 0) }
+    func aheadBehind(for folder: Folder, defaultBranch: String) async throws -> (ahead: Int, behind: Int) { (0, 0) }
+
     func hasUpstream(for folder: Folder) async throws -> Bool { false }
     func discardChanges(in folder: Folder) async throws {}
     func discardChange(in folder: Folder, path: RelativePath) async throws {}

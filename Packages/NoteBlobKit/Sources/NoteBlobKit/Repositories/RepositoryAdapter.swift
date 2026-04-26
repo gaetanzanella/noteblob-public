@@ -11,7 +11,7 @@ protocol RepositoryAdapter: Sendable {
     func switchBranch(to name: String, in folder: Folder) async throws
     func deleteBranch(named: String, in folder: Folder) async throws
     func fetch(_ folder: Folder) async throws
-    func aheadBehind(for folder: Folder) async throws -> (ahead: Int, behind: Int)
+    func aheadBehind(for folder: Folder, defaultBranch: String) async throws -> (ahead: Int, behind: Int)
     func hasUpstream(for folder: Folder) async throws -> Bool
     func discardChanges(in folder: Folder) async throws
     func discardChange(in folder: Folder, path: RelativePath) async throws

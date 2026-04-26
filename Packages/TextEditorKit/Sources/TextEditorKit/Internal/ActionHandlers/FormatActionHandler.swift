@@ -13,7 +13,7 @@ struct FormatActionHandler: DocumentEditorActionHandler {
         let text = context.currentText
         guard !text.isEmpty else { return nil }
 
-        var document = Document(parsing: text)
+        var document = Document(parsing: text, options: .documentDefault)
 
         // Rewrite: sort checked items after unchecked in each list
         var rewriter = CheckboxSortRewriter()
@@ -21,20 +21,21 @@ struct FormatActionHandler: DocumentEditorActionHandler {
             document = rewritten
         }
 
-        // Format with consistent style
-        let options = MarkupFormatter.Options(
-            unorderedListMarker: .dash,
-            orderedListNumerals: .incrementing(start: 1)
-        )
-        let formatted = document.format(options: options)
+        // Format with consistent style — shared with TableActionHandler so
+        // an immediate format-document on a freshly inserted table is a no-op.
+        // `MarkupFormatter` doesn't emit a trailing newline; preserve one if
+        // the original text ended with one so format-document doesn't strip
+        // the doc-level separator (and so insert + format roundtrips cleanly).
+        let formatted = document.format(options: .documentDefault)
+        let final = text.hasSuffix("\n") ? formatted + "\n" : formatted
 
-        guard formatted != text else { return nil }
+        guard final != text else { return nil }
 
         let selection = context.selectionOffsets()
-        let newCursor = min(selection.lowerBound, formatted.utf16.count)
+        let newCursor = min(selection.lowerBound, final.utf16.count)
 
         return TextEdit(
-            changes: [.replace(range: 0..<text.utf16.count, with: formatted)],
+            changes: [.replace(range: 0..<text.utf16.count, with: final)],
             selection: newCursor..<newCursor
         )
     }

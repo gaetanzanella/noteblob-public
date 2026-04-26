@@ -15,7 +15,7 @@ extension SwiftGitXClient {
             try gitCheck(git_revwalk_new(&walker, repo.pointer))
             defer { git_revwalk_free(walker) }
 
-            git_revwalk_sorting(walker, GIT_SORT_TIME.rawValue)
+            git_revwalk_sorting(walker, GIT_SORT_TIME.rawValue | GIT_SORT_TOPOLOGICAL.rawValue)
             try gitCheck(git_revwalk_push_head(walker))
 
             // Hide commits reachable from the given ref

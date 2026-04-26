@@ -20,6 +20,8 @@ final class AutoSaveObserver: DocumentEditorLifecycleInterceptor {
         case .didCancelEditing:
             cancelPendingSave()
             saveSync(text: context.editorContext.currentText, to: url)
+        case .didLoad, .didChangeSelection:
+            break
         }
     }
 

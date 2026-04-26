@@ -14,6 +14,8 @@ struct AddFolderMenuView: View {
                     switch selection() {
                     case .local: return .selectLocal
                     case .github: return .selectGitHub
+                    case .createRepository: return .selectCreateRepository
+                    case .branchPicker: return nil
                     case nil: return nil
                     }
                 },
@@ -33,7 +35,7 @@ struct AddFolderMenuView: View {
                                 .foregroundStyle(.secondary)
                         }
                     } icon: {
-                        Image(systemName: "folder.badge.plus")
+                        Image(systemName: "internaldrive")
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -66,6 +68,31 @@ struct AddFolderMenuView: View {
                         .foregroundStyle(.tertiary)
                 }
                 .tag(AddFolderMenuViewAction.selectGitHub)
+            }
+
+            Section {
+                HStack {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("add_folder.menu.create_repository.title", bundle: .module)
+                            Text(
+                                vm.isAuthenticated
+                                    ? "add_folder.menu.create_repository.description"
+                                    : "add_folder.menu.create_repository.needs_auth",
+                                bundle: .module
+                            )
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: "shippingbox")
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+                .tag(AddFolderMenuViewAction.selectCreateRepository)
             }
         }
         .navigationTitle(Text("add_folder.title", bundle: .module))

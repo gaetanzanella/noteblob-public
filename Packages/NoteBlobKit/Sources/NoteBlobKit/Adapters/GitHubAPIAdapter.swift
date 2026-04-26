@@ -17,8 +17,11 @@ final class GitHubAPIAdapter: RepositoryAdapter, @unchecked Sendable {
     }
 
     func cloneRepository(_ folder: Folder, credentials: Credentials) async throws {
-        let remoteURL = urlProvider.remoteURL(for: folder, credentials: credentials)
         let localPath = localPathProvider.localPath(for: folder)
+        if FileManager.default.fileExists(atPath: localPath.path) {
+            throw NoteBlobError.folderAlreadyInstalled
+        }
+        let remoteURL = urlProvider.remoteURL(for: folder, credentials: credentials)
         try await mapError {
             try await gitClient.clone(remoteURL: remoteURL, to: localPath)
         }
@@ -81,9 +84,9 @@ final class GitHubAPIAdapter: RepositoryAdapter, @unchecked Sendable {
         }
     }
 
-    func aheadBehind(for folder: Folder) async throws -> (ahead: Int, behind: Int) {
+    func aheadBehind(for folder: Folder, defaultBranch: String) async throws -> (ahead: Int, behind: Int) {
         try await mapError {
-            try await gitClient.aheadBehind(at: localPathProvider.localPath(for: folder))
+            try await gitClient.aheadBehind(at: localPathProvider.localPath(for: folder), defaultBranch: defaultBranch)
         }
     }
 
@@ -141,6 +144,8 @@ final class GitHubAPIAdapter: RepositoryAdapter, @unchecked Sendable {
         case .apiError(_, let message):
             .syncFailed(message)
         case .missingMetadata:
+            .syncFailed(error.localizedDescription)
+        case .noDiff:
             .syncFailed(error.localizedDescription)
         }
     }

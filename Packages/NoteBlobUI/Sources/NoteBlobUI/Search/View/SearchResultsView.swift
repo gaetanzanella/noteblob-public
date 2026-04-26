@@ -39,6 +39,7 @@ public struct SearchResultsView: View {
             .listStyle(.plain)
             .scrollDismissesKeyboard(.interactively)
         #endif
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.background)
         .onAppear {
             presenter.on(.search(searchText))

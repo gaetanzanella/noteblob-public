@@ -7,7 +7,7 @@ struct EditorContext {
     private let selection: Range<SourcePosition>
     private let selectionUTF16: Range<Int>
     private let text: String
-    private let documentLayout: any DocumentLayout
+    let documentLayout: any DocumentLayout
     let documentURL: URL?
 
     init(selectionUTF16: Range<Int>, text: String, documentLayout: any DocumentLayout, documentURL: URL? = nil) {
@@ -40,6 +40,11 @@ struct EditorContext {
 
     func currentLineRange() -> Range<Int> {
         documentLayout.lineRange(at: selection.lowerBound.line)
+    }
+
+    /// Line numbers touched by the selection, inclusive on both ends.
+    var selectionLineRange: Range<Int> {
+        selection.lowerBound.line..<(selection.upperBound.line + 1)
     }
 
     func lineRange(at line: Int) -> Range<Int> {

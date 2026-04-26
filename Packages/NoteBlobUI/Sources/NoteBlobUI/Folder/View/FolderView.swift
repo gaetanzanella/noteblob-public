@@ -1,5 +1,10 @@
 import NoteBlobKit
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 public struct FolderView: View {
 
@@ -273,6 +278,15 @@ public struct FolderView: View {
         return NoteItemTransfer(folder: presenter.folder, items: items)
     }
 
+    private func copyToPasteboard(_ string: String) {
+        #if os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(string, forType: .string)
+        #else
+        UIPasteboard.general.string = string
+        #endif
+    }
+
     private func handleDrop(_ transfers: [NoteItemTransfer], toFolderPath: RelativePath, operation: DropOperation = .move) -> Bool {
         guard let transfer = transfers.first, !transfer.items.isEmpty else { return false }
         let paths = transfer.items.map(\.path)
@@ -354,6 +368,14 @@ public struct FolderView: View {
                             Label(
                                 String.localized("folder.rename.action"),
                                 systemImage: "pencil"
+                            )
+                        }
+                        Button {
+                            copyToPasteboard(row.id)
+                        } label: {
+                            Label(
+                                String.localized("folder.copy_path.action"),
+                                systemImage: "doc.on.doc"
                             )
                         }
                         Button {

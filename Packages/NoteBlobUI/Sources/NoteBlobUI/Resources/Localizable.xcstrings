@@ -7,12 +7,21 @@
     "·" : {
 
     },
+    "Account..." : {
+
+    },
     "account.authenticated.description" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clearing the token will sign you out of GitHub. The token is also stored in each repository URL — delete the folder to fully remove it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le jeton vous déconnectera de GitHub. Le jeton est aussi stocké dans chaque URL de dépôt — supprimez le dossier pour le retirer complètement."
           }
         }
       }
@@ -24,6 +33,12 @@
             "state" : "translated",
             "value" : "Clear Token"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le jeton"
+          }
         }
       }
     },
@@ -32,7 +47,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Send Email"
+            "value" : "Contact Developer"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contacter le développeur"
           }
         }
       }
@@ -40,6 +61,12 @@
     "account.contact.title" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact"
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contact"
@@ -54,6 +81,12 @@
             "state" : "translated",
             "value" : "GitHub Repository"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dépôt GitHub"
+          }
         }
       }
     },
@@ -64,6 +97,12 @@
             "state" : "translated",
             "value" : "Report an Issue"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaler un problème"
+          }
         }
       }
     },
@@ -73,6 +112,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contributing"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contribuer"
           }
         }
       }
@@ -85,6 +130,12 @@
             "state" : "translated",
             "value" : "GitHub credentials will appear here when you add a GitHub repository."
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les identifiants GitHub apparaîtront ici lorsque vous ajouterez un dépôt GitHub."
+          }
         }
       }
     },
@@ -96,6 +147,12 @@
             "state" : "translated",
             "value" : "No Account"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun compte"
+          }
         }
       }
     },
@@ -106,12 +163,24 @@
             "state" : "translated",
             "value" : "Migrate from Apple Notes"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migrer depuis Apple Notes"
+          }
         }
       }
     },
     "account.import.title" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migration"
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Migration"
@@ -127,6 +196,12 @@
             "state" : "translated",
             "value" : "Sign Out"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se déconnecter"
+          }
         }
       }
     },
@@ -136,6 +211,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add this to your MCP client configuration:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoutez ceci à la configuration de votre client MCP :"
           }
         }
       }
@@ -147,6 +228,12 @@
             "state" : "translated",
             "value" : "Allow AI assistants to discover and search your notes via the Model Context Protocol."
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permettre aux assistants IA de découvrir et rechercher vos notes via le Model Context Protocol."
+          }
         }
       }
     },
@@ -156,6 +243,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Listening on port 9100"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écoute sur le port 9100"
           }
         }
       }
@@ -167,6 +260,12 @@
             "state" : "translated",
             "value" : "Starting…"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrage…"
+          }
         }
       }
     },
@@ -176,6 +275,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server stopped"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveur arrêté"
           }
         }
       }
@@ -187,6 +292,12 @@
             "state" : "translated",
             "value" : "MCP Server"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveur MCP"
+          }
         }
       }
     },
@@ -196,6 +307,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enable"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activer"
           }
         }
       }
@@ -207,6 +324,12 @@
             "state" : "translated",
             "value" : "Account"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compte"
+          }
         }
       }
     },
@@ -217,6 +340,12 @@
             "state" : "translated",
             "value" : "Add"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter"
+          }
         }
       }
     },
@@ -225,7 +354,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Search for a GitHub repository to clone."
+            "value" : "Search by name or paste a GitHub URL."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherchez par nom ou collez une URL GitHub."
           }
         }
       }
@@ -237,12 +372,24 @@
             "state" : "translated",
             "value" : "Search Repositories"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher des dépôts"
+          }
         }
       }
     },
     "add_folder.github.title" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub"
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "GitHub"
@@ -257,6 +404,12 @@
             "state" : "translated",
             "value" : "Folder name"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom du dossier"
+          }
         }
       }
     },
@@ -266,6 +419,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Local Folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossier local"
+          }
+        }
+      }
+    },
+    "add_folder.menu.create_repository.description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create an empty GitHub repository and clone it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un dépôt GitHub vide et le cloner."
+          }
+        }
+      }
+    },
+    "add_folder.menu.create_repository.needs_auth" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to your GitHub account first."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez-vous d'abord à votre compte GitHub."
+          }
+        }
+      }
+    },
+    "add_folder.menu.create_repository.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create New Repository"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un nouveau dépôt"
           }
         }
       }
@@ -277,6 +484,12 @@
             "state" : "translated",
             "value" : "Clone a repository and sync with GitHub (recommended)."
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloner un dépôt et synchroniser avec GitHub (recommandé)."
+          }
         }
       }
     },
@@ -286,6 +499,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sign in to your GitHub account first."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez-vous d'abord à votre compte GitHub."
           }
         }
       }
@@ -297,6 +516,12 @@
             "state" : "translated",
             "value" : "Clone from GitHub"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloner depuis GitHub"
+          }
         }
       }
     },
@@ -306,6 +531,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Store notes on this device only (no backup)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stocker les notes uniquement sur cet appareil (sans sauvegarde)."
           }
         }
       }
@@ -317,6 +548,12 @@
             "state" : "translated",
             "value" : "Create Local Folder"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un dossier local"
+          }
         }
       }
     },
@@ -325,7 +562,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Search repos..."
+            "value" : "Search or paste a URL..."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher ou coller une URL…"
           }
         }
       }
@@ -337,6 +580,12 @@
             "state" : "translated",
             "value" : "Add Folder"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un dossier"
+          }
         }
       }
     },
@@ -347,12 +596,24 @@
             "state" : "translated",
             "value" : "Sign in"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se connecter"
+          }
         }
       }
     },
     "auth.title" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NoteBlob"
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "NoteBlob"
@@ -365,7 +626,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Token needs repo scope. The token is stored in both the keychain and the repository URL."
+            "value" : "Create a personal access token with **repo** scope — [generate one on GitHub](https://github.com/settings/tokens/new?scopes=repo&description=NoteBlob). The token is stored in the keychain and embedded in each repository URL."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créez un jeton d'accès personnel avec la portée **repo** — [générez-en un sur GitHub](https://github.com/settings/tokens/new?scopes=repo&description=NoteBlob). Le jeton est stocké dans le trousseau et intégré à l'URL de chaque dépôt."
           }
         }
       }
@@ -377,12 +644,136 @@
             "state" : "translated",
             "value" : "Paste GitHub token"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collez le jeton GitHub"
+          }
+        }
+      }
+    },
+    "branch_picker.already_installed.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This repository is already in your folders."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce dépôt est déjà dans vos dossiers."
+          }
+        }
+      }
+    },
+    "branch_picker.already_installed.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder Already Installed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossier déjà installé"
+          }
+        }
+      }
+    },
+    "branch_picker.empty.description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This repository has no branches."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce dépôt n'a aucune branche."
+          }
+        }
+      }
+    },
+    "branch_picker.empty.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Branches"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune branche"
+          }
+        }
+      }
+    },
+    "branch_picker.error.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to Load Branches"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de charger les branches"
+          }
+        }
+      }
+    },
+    "branch_picker.explanation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NoteBlob uses a simple pull request workflow: each change is committed to its own branch, pushed, and merged via a pull request. Pick the branch that pull requests should target."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NoteBlob utilise un workflow simple basé sur les pull requests : chaque modification est committée sur une branche dédiée, puis poussée et fusionnée via une pull request. Choisissez la branche cible des pull requests."
+          }
+        }
+      }
+    },
+    "branch_picker.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default Branch"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Branche par défaut"
+          }
         }
       }
     },
     "commit.action" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commit"
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Commit"
@@ -397,6 +788,12 @@
             "state" : "translated",
             "value" : "Commit & Push"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commit et push"
+          }
         }
       }
     },
@@ -406,6 +803,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Commit, Push & Merge"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commit, push et merge"
           }
         }
       }
@@ -429,6 +832,24 @@
               }
             }
           }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld modification"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld modifications"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -438,6 +859,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Discard Changes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler les modifications"
           }
         }
       }
@@ -449,6 +876,12 @@
             "state" : "translated",
             "value" : "Discard Changes"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler les modifications"
+          }
         }
       }
     },
@@ -458,6 +891,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This will revert all uncommitted changes. This action cannot be undone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cela annulera toutes les modifications non validées. Cette action est irréversible."
           }
         }
       }
@@ -469,6 +908,12 @@
             "state" : "translated",
             "value" : "Discard All Changes?"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler toutes les modifications ?"
+          }
         }
       }
     },
@@ -478,6 +923,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Discard"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler"
           }
         }
       }
@@ -489,6 +940,12 @@
             "state" : "translated",
             "value" : "Generating..."
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Génération…"
+          }
         }
       }
     },
@@ -498,6 +955,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Commit message"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message de commit"
           }
         }
       }
@@ -509,6 +972,12 @@
             "state" : "translated",
             "value" : "Describe your changes"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Décrivez vos modifications"
+          }
         }
       }
     },
@@ -518,6 +987,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Commit"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commit"
+          }
+        }
+      }
+    },
+    "common.back" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retour"
           }
         }
       }
@@ -529,6 +1020,12 @@
             "state" : "translated",
             "value" : "Cancel"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler"
+          }
         }
       }
     },
@@ -538,6 +1035,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Create"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer"
           }
         }
       }
@@ -549,6 +1052,12 @@
             "state" : "translated",
             "value" : "Delete"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer"
+          }
         }
       }
     },
@@ -558,6 +1067,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Done"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminé"
           }
         }
       }
@@ -569,6 +1084,28 @@
             "state" : "translated",
             "value" : "Error"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erreur"
+          }
+        }
+      }
+    },
+    "common.next" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivant"
+          }
         }
       }
     },
@@ -579,55 +1116,155 @@
             "state" : "translated",
             "value" : "OK"
           }
-        }
-      }
-    },
-    "error.conflict" : {
-      "localizations" : {
-        "en" : {
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Merge conflict detected. Resolve conflicts before continuing."
+            "value" : "OK"
           }
         }
       }
     },
-    "error.invalid_operation %@" : {
+    "content.no_repository.description" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalid operation: %@"
+            "value" : "Pick a repository from the sidebar or add a new one to get started."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez un dépôt dans la barre latérale ou ajoutez-en un nouveau pour commencer."
           }
         }
       }
     },
-    "error.merge_conflict %@" : {
+    "content.no_repository.title" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Merge conflict on pull request. Resolve manually: %@"
+            "value" : "No Repository Selected"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun dépôt sélectionné"
           }
         }
       }
     },
-    "error.not_authenticated" : {
+    "create_repository.auto_description" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not authenticated. If your token has expired, you may need to re-add the folder after signing in."
+            "value" : "Notes repository managed with NoteBlob."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dépôt de notes géré avec NoteBlob."
           }
         }
       }
     },
-    "error.sync_failed %@" : {
+    "create_repository.create.action" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sync failed: %@"
+            "value" : "Create"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer"
+          }
+        }
+      }
+    },
+    "create_repository.name.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Will be created under your GitHub account."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sera créé sous votre compte GitHub."
+          }
+        }
+      }
+    },
+    "create_repository.name.placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repository name"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom du dépôt"
+          }
+        }
+      }
+    },
+    "create_repository.private.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only you and collaborators can see a private repository."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuls vous et les collaborateurs peuvent voir un dépôt privé."
+          }
+        }
+      }
+    },
+    "create_repository.private.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé"
+          }
+        }
+      }
+    },
+    "create_repository.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Repository"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveau dépôt"
           }
         }
       }
@@ -645,6 +1282,12 @@
             "state" : "translated",
             "value" : "Heading 1"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titre 1"
+          }
         }
       }
     },
@@ -654,6 +1297,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Heading 2"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titre 2"
           }
         }
       }
@@ -665,6 +1314,12 @@
             "state" : "translated",
             "value" : "Heading 3"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titre 3"
+          }
         }
       }
     },
@@ -674,6 +1329,140 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Heading 4"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titre 4"
+          }
+        }
+      }
+    },
+    "error.conflict" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge conflict detected. Resolve conflicts before continuing."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conflit de fusion détecté. Résolvez les conflits avant de continuer."
+          }
+        }
+      }
+    },
+    "error.folder_already_installed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This repository is already in your folders."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce dépôt est déjà dans vos dossiers."
+          }
+        }
+      }
+    },
+    "error.invalid_operation %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid operation: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opération invalide : %@"
+          }
+        }
+      }
+    },
+    "error.merge_conflict %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge conflict on pull request. Resolve manually: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conflit de merge sur la pull request. Résolvez manuellement : %@"
+          }
+        }
+      }
+    },
+    "error.not_authenticated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not authenticated. If your token has expired, you may need to re-add the folder after signing in."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non authentifié. Si votre jeton a expiré, vous devrez peut-être réajouter le dossier après vous être connecté."
+          }
+        }
+      }
+    },
+    "error.sync_failed %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync failed: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de la synchronisation : %@"
+          }
+        }
+      }
+    },
+    "folder_list.delete.message %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"%@\" will be removed from NoteBlob. Local files will be deleted."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« %@ » sera supprimé de NoteBlob. Les fichiers locaux seront supprimés."
+          }
+        }
+      }
+    },
+    "folder_list.delete.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Repository?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le dépôt ?"
           }
         }
       }
@@ -685,6 +1474,12 @@
             "state" : "translated",
             "value" : "Tap + to add your first repository."
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuyez sur + pour ajouter votre premier dépôt."
+          }
         }
       }
     },
@@ -694,6 +1489,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No Repositories"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun dépôt"
           }
         }
       }
@@ -706,19 +1507,43 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld synced folder"
+                  "value" : "%lld synced repository"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld synced folders"
+                  "value" : "%lld synced repositories"
                 }
               },
               "zero" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "No synced folders"
+                  "value" : "No synced repositories"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld dépôt synchronisé"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld dépôts synchronisés"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Aucun dépôt synchronisé"
                 }
               }
             }
@@ -733,6 +1558,84 @@
             "state" : "translated",
             "value" : "Repositories"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dépôts"
+          }
+        }
+      }
+    },
+    "folder.copy_path.action" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Path"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier le chemin"
+          }
+        }
+      }
+    },
+    "folder.delete.message %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item will be permanently deleted."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items will be permanently deleted."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld élément sera définitivement supprimé."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld éléments seront définitivement supprimés."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "folder.delete.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer ?"
+          }
         }
       }
     },
@@ -742,6 +1645,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Create a new note to get started."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créez une nouvelle note pour commencer."
           }
         }
       }
@@ -753,6 +1662,12 @@
             "state" : "translated",
             "value" : "Empty Folder"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossier vide"
+          }
         }
       }
     },
@@ -762,6 +1677,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Move"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplacer"
+          }
+        }
+      }
+    },
+    "folder.move.destination_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destination"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destination"
           }
         }
       }
@@ -773,6 +1710,12 @@
             "state" : "translated",
             "value" : "Open in Window"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir dans une fenêtre"
+          }
         }
       }
     },
@@ -782,6 +1725,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rename"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renommer"
           }
         }
       }
@@ -793,6 +1742,12 @@
             "state" : "translated",
             "value" : "Name cannot be empty."
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nom ne peut pas être vide."
+          }
         }
       }
     },
@@ -802,6 +1757,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enter a new name for this item."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez un nouveau nom pour cet élément."
           }
         }
       }
@@ -813,6 +1774,12 @@
             "state" : "translated",
             "value" : "New name"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveau nom"
+          }
         }
       }
     },
@@ -822,6 +1789,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rename"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renommer"
           }
         }
       }
@@ -834,6 +1807,12 @@
             "state" : "translated",
             "value" : "Search"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher"
+          }
         }
       }
     },
@@ -843,6 +1822,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Select"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionner"
           }
         }
       }
@@ -862,6 +1847,30 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld folders"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : ""
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld dossier"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld dossiers"
                 }
               },
               "zero" : {
@@ -900,6 +1909,30 @@
               }
             }
           }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld note"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld notes"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : ""
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -909,6 +1942,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Folder name cannot be empty."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nom du dossier ne peut pas être vide."
           }
         }
       }
@@ -920,6 +1959,12 @@
             "state" : "translated",
             "value" : "Folder name"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom du dossier"
+          }
         }
       }
     },
@@ -930,12 +1975,24 @@
             "state" : "translated",
             "value" : "New Folder"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveau dossier"
+          }
         }
       }
     },
     "new_note.extension_hint" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ".md"
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : ".md"
@@ -950,6 +2007,12 @@
             "state" : "translated",
             "value" : "Filename"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom du fichier"
+          }
         }
       }
     },
@@ -959,6 +2022,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "New Note"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvelle note"
           }
         }
       }
@@ -970,6 +2039,124 @@
             "state" : "translated",
             "value" : "Edit"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier"
+          }
+        }
+      }
+    },
+    "note.link.menu.note" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link to Note…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lier à une note…"
+          }
+        }
+      }
+    },
+    "note.link.menu.url" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web URL…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL web…"
+          }
+        }
+      }
+    },
+    "note.link.picker.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link to Note"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lier à une note"
+          }
+        }
+      }
+    },
+    "note.link.url.confirm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer"
+          }
+        }
+      }
+    },
+    "note.link.url.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert URL"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer une URL"
+          }
+        }
+      }
+    },
+    "note.link.url.title_field" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titre"
+          }
+        }
+      }
+    },
+    "note.link.url.url_field" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL"
+          }
         }
       }
     },
@@ -979,6 +2166,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Format"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format"
+          }
+        }
+      }
+    },
+    "note.menu.redo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablir"
           }
         }
       }
@@ -990,6 +2199,12 @@
             "state" : "translated",
             "value" : "Show Formatted"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le rendu"
+          }
         }
       }
     },
@@ -1000,11 +2215,350 @@
             "state" : "translated",
             "value" : "Show Source"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher la source"
+          }
+        }
+      }
+    },
+    "note.menu.undo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler"
+          }
         }
       }
     },
     "note.select.title" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a Note"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionnez une note"
+          }
+        }
+      }
+    },
+    "note.table.confirm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer"
+          }
+        }
+      }
+    },
+    "note.table.insert_column_left" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert Column Left"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer une colonne à gauche"
+          }
+        }
+      }
+    },
+    "note.table.insert_column_right" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert Column Right"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer une colonne à droite"
+          }
+        }
+      }
+    },
+    "note.table.insert_row_above" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert Row Above"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer une ligne au-dessus"
+          }
+        }
+      }
+    },
+    "note.table.insert_row_below" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert Row Below"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer une ligne en dessous"
+          }
+        }
+      }
+    },
+    "note.table.remove_column" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Column"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer la colonne"
+          }
+        }
+      }
+    },
+    "note.table.remove_row" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Row"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer la ligne"
+          }
+        }
+      }
+    },
+    "note.table.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert Table"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insérer un tableau"
+          }
+        }
+      }
+    },
+    "sync.flow.commit.current.on_branch %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your changes will be saved to %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos modifications seront enregistrées sur %@."
+          }
+        }
+      }
+    },
+    "sync.flow.commit.current.on_main" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dedicated branch will be created automatically. Your changes are saved there, separate from main."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une branche dédiée sera créée automatiquement. Vos modifications y seront enregistrées, séparément de main."
+          }
+        }
+      }
+    },
+    "sync.flow.commit.done %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your changes are saved on %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos modifications sont enregistrées sur %@."
+          }
+        }
+      }
+    },
+    "sync.flow.merge.current %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge %@ back into main. A pull request will be created and merged automatically."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge %@ dans main. Une pull request sera créée et merge automatiquement."
+          }
+        }
+      }
+    },
+    "sync.flow.merge.upcoming" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your branch will be merged back into main automatically via a pull request."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre branche sera merge dans main automatiquement via une pull request."
+          }
+        }
+      }
+    },
+    "sync.flow.push.current %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync %@ with GitHub to back up your work and prepare for merging."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Push %@ sur GitHub pour sauvegarder votre travail et préparer le merge."
+          }
+        }
+      }
+    },
+    "sync.flow.push.done %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is synced with GitHub."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ est synchronisée avec GitHub."
+          }
+        }
+      }
+    },
+    "sync.flow.push.upcoming" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Push your local branch to GitHub and prepare the merge."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poussez votre branche locale sur GitHub et préparez le merge."
+          }
+        }
+      }
+    },
+    "sync.flow.step.commit.label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Commit"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Commit"
+          }
+        }
+      }
+    },
+    "sync.flow.step.merge.label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Merge"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Merge"
+          }
+        }
+      }
+    },
+    "sync.flow.step.push.label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Push"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Push"
+          }
+        }
+      }
     },
     "sync.merge.action" : {
       "localizations" : {
@@ -1013,16 +2567,11 @@
             "state" : "translated",
             "value" : "Merge"
           }
-        }
-      }
-    },
-    "sync.merge.description" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All commits have been pushed. Create a pull request and merge your changes into main."
+            "value" : "Merge"
           }
         }
       }
@@ -1034,16 +2583,11 @@
             "state" : "translated",
             "value" : "Changes"
           }
-        }
-      }
-    },
-    "sync.merge.title" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ready to Merge"
+            "value" : "Modifications"
           }
         }
       }
@@ -1053,7 +2597,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your notes are stored locally and not backed up. To enable sync, recreate this folder by cloning a GitHub repository."
+            "value" : "Your notes are stored locally and not backed up. To back them up, open this folder and use the Move action to transfer them into a GitHub-backed folder."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos notes sont stockées localement et ne sont pas sauvegardées. Pour les sauvegarder, ouvrez ce dossier et utilisez l'action Déplacer pour les transférer dans un dossier associé à GitHub."
           }
         }
       }
@@ -1061,6 +2611,12 @@
     "sync.not_backed.nav_title" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " "
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : " "
@@ -1075,12 +2631,24 @@
             "state" : "translated",
             "value" : "Not Backed Up"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non sauvegardé"
+          }
         }
       }
     },
     "sync.pull.action" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull"
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pull"
@@ -1095,6 +2663,12 @@
             "state" : "translated",
             "value" : "The remote repository has new changes. Pull to update your local copy."
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le dépôt distant contient de nouvelles modifications. Pull pour mettre à jour votre copie locale."
+          }
         }
       }
     },
@@ -1104,6 +2678,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Changes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifications"
           }
         }
       }
@@ -1115,12 +2695,24 @@
             "state" : "translated",
             "value" : "Updates Available"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mises à jour disponibles"
+          }
         }
       }
     },
     "sync.push.action" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Push"
+          }
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Push"
@@ -1135,16 +2727,11 @@
             "state" : "translated",
             "value" : "Push & Merge"
           }
-        }
-      }
-    },
-    "sync.push.description" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You have local commits ready to be pushed to the remote repository."
+            "value" : "Push et merge"
           }
         }
       }
@@ -1156,16 +2743,11 @@
             "state" : "translated",
             "value" : "Changes"
           }
-        }
-      }
-    },
-    "sync.push.title" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
+        },
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ready to Push"
+            "value" : "Modifications"
           }
         }
       }
@@ -1177,6 +2759,12 @@
             "state" : "translated",
             "value" : "Your local copy is in sync with the remote repository."
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre copie locale est synchronisée avec le dépôt distant."
+          }
         }
       }
     },
@@ -1187,6 +2775,12 @@
             "state" : "translated",
             "value" : "Changes"
           }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifications"
+          }
         }
       }
     },
@@ -1196,6 +2790,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Up to Date"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À jour"
           }
         }
       }

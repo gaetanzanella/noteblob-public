@@ -12,6 +12,16 @@ struct CodeBlockActionHandler: DocumentEditorActionHandler {
         return false
     }
 
+    func isEnabled(in context: EditorContext) -> Bool {
+        guard let markdown = context.markdown() else { return true }
+        let tokens = markdown.selectionLineTokens()
+        guard tokens.count <= 1 else { return false }
+        switch tokens.first ?? nil {
+        case nil, .paragraph, .codeBlock: return true
+        default: return false
+        }
+    }
+
     func activate(in context: EditorContext) -> TextEdit? {
         let selection = context.selectionOffsets()
         let lineStart = context.currentLineRange().lowerBound

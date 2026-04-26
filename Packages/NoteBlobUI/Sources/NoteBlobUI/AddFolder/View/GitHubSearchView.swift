@@ -64,11 +64,6 @@ struct GitHubSearchView: View {
         .scenePadding()
         .onChange(of: searchText) {
             presenter.on(.editSearchQuery(searchText))
-            Task {
-                try? await Task.sleep(for: .milliseconds(500))
-                guard !Task.isCancelled else { return }
-                presenter.on(.search)
-            }
         }
         .navigationTitle(Text("add_folder.github.title", bundle: .module))
         .toolbar {
@@ -111,19 +106,9 @@ struct GitHubSearchView: View {
         )
         .onChange(of: searchText) {
             presenter.on(.editSearchQuery(searchText))
-            Task {
-                try? await Task.sleep(for: .milliseconds(500))
-                guard !Task.isCancelled else { return }
-                presenter.on(.search)
-            }
         }
         .navigationTitle(Text("add_folder.github.title", bundle: .module))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                addButton(vm: vm)
-            }
-        }
     }
     #endif
 
@@ -140,16 +125,8 @@ struct GitHubSearchView: View {
             }
         )) {
             ForEach(rows) { row in
-                HStack {
-                    Text(row.id)
-                    Spacer()
-                    if vm.selectedResult == row.id {
-                        Image(systemName: "checkmark")
-                            .foregroundStyle(.tint)
-                            .fontWeight(.semibold)
-                    }
-                }
-                .tag(row.id)
+                DisclosureRow(title: row.id, systemImage: "book.closed")
+                    .tag(row.id)
             }
 
             if let error = vm.errorMessage {
@@ -159,12 +136,14 @@ struct GitHubSearchView: View {
         }
     }
 
+    #if os(macOS)
     private func addButton(vm: GitHubSearchViewModel) -> some View {
-        Button { presenter.on(.add) } label: {
-            Text("add_folder.add.action", bundle: .module).bold()
+        Button { presenter.on(.next) } label: {
+            Text("common.next", bundle: .module).bold()
         }
         .buttonStyle(.borderedProminent)
         .buttonBorderShape(.capsule)
         .disabled(!vm.canAdd)
     }
+    #endif
 }

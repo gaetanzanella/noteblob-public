@@ -1,31 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Account..." : {
 
-    },
-    "folder.select.title" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select a Folder"
-          }
-        }
-      }
-    },
-    "note.select.title" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select a Note"
-          }
-        }
-      }
-    }
   },
   "version" : "1.0"
 }

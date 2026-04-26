@@ -44,7 +44,30 @@ struct DocumentEditorTests {
         #expect(input._selectedRange == NSRange(location: 7, length: 0))
     }
 
-    // MARK: - Actions
+    // MARK: - Lifecycle
+
+    @Test @MainActor
+    func lifecycleSeesPostInterceptorText() {
+        let recorder = CallRecorder()
+        // Interceptor replaces the inserted "!" with "XX".
+        let edit = TextEdit(changes: [.replace(range: 5..<6, with: "XX")], selection: 7..<7)
+        let lifecycle = SpyLifecycle()
+        let editor = DocumentEditor(
+            interceptors: [SpyInterceptor(editToReturn: edit, recorder: recorder)],
+            lifecycleInterceptors: [lifecycle],
+            actionHandlerFactory: SpyFactory(recorder: recorder)
+        )
+        let input = MockTextInput()
+        editor.attach(to: input)
+        editor.loadText("Hello")
+
+        input.simulateChange(range: NSRange(location: 5, length: 0), replacement: "!", newText: "Hello!")
+
+        #expect(input._text == "HelloXX")
+        // Lifecycle must always observe the final (post-interceptor) text.
+        #expect(lifecycle.textsSeen.allSatisfy { $0 == "HelloXX" })
+        #expect(!lifecycle.textsSeen.isEmpty)
+    }
 
     @Test @MainActor
     func applyCallsActivateWhenInactive() {
@@ -279,6 +302,88 @@ struct DocumentEditorTests {
         #expect(sorted[1].offset == 5)
         #expect(sorted[2].offset == 0)
     }
+
+    // MARK: - Input-robustness probes
+    //
+    // Probes for crashes / wrong state driven by input. Most of the
+    // "lying TextInput" probes I started with (selection past end of
+    // text, negative NSRange length) aren't reachable through stock
+    // UITextView/NSTextView: the OS keeps selectedRange within bounds,
+    // and `shouldChangeTextIn` never reports negative lengths. They
+    // would only trigger through a buggy custom `TextInput` conformer
+    // or direct misuse of `TextInputDelegate`, so they're left out.
+    //
+    // Kept here:
+    //   - `.heading(-1)`: reachable via API misuse. Traps in
+    //     `HeadingActionHandler.activate`.
+    //   - Heading toggle at column 0 on a heading line: reachable via
+    //     normal user interaction (cursor at start of line, tap heading
+    //     toolbar). Produces a negative `selectedRange`. Not a hard
+    //     crash today because UIKit/AppKit clamp, but a real logic bug.
+
+    /// `HeadingActionHandler.activate` does
+    /// `String(repeating: "#", count: level)` with no lower bound on
+    /// `level`. The public `Mark.heading(Int)` takes any `Int`.
+    @Test @MainActor
+    func crash_heading_negative_level() {
+        let input = MockTextInput()
+        let editor = DocumentEditor()
+        editor.attach(to: input)
+        editor.loadText("hello")
+        editor.apply(.format(.heading(-1)))
+    }
+
+    /// Cursor at column 0 on a heading line + tap heading toggle.
+    /// The cursor must stay at the line start, not cross into the
+    /// previous line or go negative.
+    @Test @MainActor
+    func headingToggleAtColumnZeroKeepsCursorAtLineStart() {
+        let input = MockTextInput()
+        let editor = DocumentEditor()
+        editor.attach(to: input)
+        editor.loadText("# a")
+        input._selectedRange = NSRange(location: 0, length: 0)
+
+        editor.apply(.format(.heading(1)))
+
+        #expect(input._text == "a")
+        #expect(input._selectedRange == NSRange(location: 0, length: 0))
+    }
+
+    /// Switching a heading to a shallower level with cursor at column 0.
+    /// The prefix shrinks; the cursor must stay at the line start.
+    @Test @MainActor
+    func headingDownlevelAtColumnZeroKeepsCursorAtLineStart() {
+        let input = MockTextInput()
+        let editor = DocumentEditor()
+        editor.attach(to: input)
+        editor.loadText("### a")
+        input._selectedRange = NSRange(location: 0, length: 0)
+
+        editor.apply(.format(.heading(1)))
+
+        #expect(input._text == "# a")
+        #expect(input._selectedRange == NSRange(location: 0, length: 0))
+    }
+
+    /// Cursor at line start on an indented list item + tap dedent.
+    /// The cursor must stay on the same line, not jump to the previous
+    /// line.
+    @Test @MainActor
+    func dedentAtLineStartKeepsCursorOnSameLine() {
+        let input = MockTextInput()
+        let editor = DocumentEditor()
+        editor.attach(to: input)
+        editor.loadText("- a\n  - b")
+        // Offset 4 is the first space of the indented "  - b" line.
+        input._selectedRange = NSRange(location: 4, length: 0)
+
+        editor.apply(.dedent)
+
+        #expect(input._text == "- a\n- b")
+        // Line 1 starts at offset 4 after the edit (unchanged).
+        #expect(input._selectedRange == NSRange(location: 4, length: 0))
+    }
 }
 
 // MARK: - Test Helpers
@@ -295,6 +400,11 @@ private final class CallRecorder: DocumentEditorDelegate {
     func documentEditorDidUpdateActions(_ editor: DocumentEditor) {
         actionStateChanges += 1
     }
+
+    func documentEditor(
+        _ editor: DocumentEditor,
+        requestTableEditing request: TableEditingRequest
+    ) {}
 }
 
 private struct SpyInterceptor: TypeInterceptor {
@@ -327,6 +437,16 @@ private struct SpyHandler: DocumentEditorActionHandler {
     }
 }
 
+@MainActor
+private final class SpyLifecycle: DocumentEditorLifecycleInterceptor {
+    var textsSeen: [String] = []
+
+    func intercept(_ context: LifecycleContext) {
+        guard case .didChangeText = context.event else { return }
+        textsSeen.append(context.editorContext.currentText)
+    }
+}
+
 private struct SpyFactory: ActionHandlerFactory {
     let recorder: CallRecorder
 
@@ -334,3 +454,4 @@ private struct SpyFactory: ActionHandlerFactory {
         SpyHandler(recorder: recorder)
     }
 }
+

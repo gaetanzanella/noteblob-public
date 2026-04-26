@@ -75,6 +75,68 @@ struct SwiftGitXClientTests {
         #expect(afterCommit.isEmpty)
     }
 
+    @Test func commitDeletedFile() async throws {
+        let baseDir = try makeTempDir()
+        defer { try? FileManager.default.removeItem(at: baseDir) }
+
+        let (_, remoteURL) = try createBareRemote(in: baseDir)
+        let cloneDir = baseDir.appendingPathComponent("client-clone")
+        try await client.clone(remoteURL: remoteURL, to: cloneDir)
+
+        // Delete the tracked README
+        try FileManager.default.removeItem(at: cloneDir.appendingPathComponent("README.md"))
+
+        let changes = try await client.pendingChanges(at: cloneDir)
+        #expect(changes.count == 1)
+        #expect(changes.first == .deleted(path: "README.md"))
+
+        // Commit should succeed (not crash on stat)
+        try await client.commitAll(at: cloneDir, message: "Delete README")
+
+        let afterCommit = try await client.pendingChanges(at: cloneDir)
+        #expect(afterCommit.isEmpty)
+
+        // Verify the file is really gone from git's perspective
+        let ls = try GitTestHelper.run(["ls-files"], at: cloneDir)
+        #expect(!ls.contains("README.md"))
+    }
+
+    @Test func commitMixedAddModifyDelete() async throws {
+        let baseDir = try makeTempDir()
+        defer { try? FileManager.default.removeItem(at: baseDir) }
+
+        let (_, remoteURL) = try createBareRemote(in: baseDir)
+        let cloneDir = baseDir.appendingPathComponent("client-clone")
+        try await client.clone(remoteURL: remoteURL, to: cloneDir)
+
+        // Add a second file and commit so we have two tracked files
+        try "second\n".write(
+            to: cloneDir.appendingPathComponent("second.md"), atomically: true, encoding: .utf8)
+        try await client.commitAll(at: cloneDir, message: "Add second")
+
+        // Now create mixed changes: add new, modify existing, delete another
+        try "new file\n".write(
+            to: cloneDir.appendingPathComponent("new.md"), atomically: true, encoding: .utf8)
+        try "modified\n".write(
+            to: cloneDir.appendingPathComponent("second.md"), atomically: true, encoding: .utf8)
+        try FileManager.default.removeItem(at: cloneDir.appendingPathComponent("README.md"))
+
+        let changes = try await client.pendingChanges(at: cloneDir)
+        #expect(changes.count == 3)
+
+        // Commit all three types at once
+        try await client.commitAll(at: cloneDir, message: "Mixed changes")
+
+        let afterCommit = try await client.pendingChanges(at: cloneDir)
+        #expect(afterCommit.isEmpty)
+
+        // Verify final state
+        let files = try GitTestHelper.run(["ls-files"], at: cloneDir)
+        #expect(!files.contains("README.md"))
+        #expect(files.contains("second.md"))
+        #expect(files.contains("new.md"))
+    }
+
     @Test func push() async throws {
         let baseDir = try makeTempDir()
         defer { try? FileManager.default.removeItem(at: baseDir) }
@@ -202,7 +264,7 @@ struct SwiftGitXClientTests {
 
         // Initially not behind
         try await client.fetch(at: cloneA)
-        let (_, initialBehind) = try await client.aheadBehind(at: cloneA)
+        let (_, initialBehind) = try await client.aheadBehind(at: cloneA, defaultBranch: "main")
         #expect(initialBehind == 0)
 
         // User B pushes a change
@@ -214,7 +276,7 @@ struct SwiftGitXClientTests {
 
         // Now A should be behind
         try await client.fetch(at: cloneA)
-        let (_, behind) = try await client.aheadBehind(at: cloneA)
+        let (_, behind) = try await client.aheadBehind(at: cloneA, defaultBranch: "main")
         #expect(behind > 0)
     }
 
@@ -264,7 +326,7 @@ struct SwiftGitXClientTests {
         try await client.clone(remoteURL: remoteURL, to: cloneDir)
 
         let branch = try await client.currentBranch(at: cloneDir)
-        #expect(branch.isMain)
+        #expect(branch.name == "main")
         #expect(branch.name == "main" || branch.name == "master")
     }
 
@@ -281,7 +343,7 @@ struct SwiftGitXClientTests {
 
         let branch = try await client.currentBranch(at: cloneDir)
         #expect(branch.name == "noteblob/test-branch")
-        #expect(!branch.isMain)
+        #expect(branch.name != "main")
 
         // Files should still be there
         #expect(
@@ -304,7 +366,7 @@ struct SwiftGitXClientTests {
 
         try await client.switchBranch(to: "main", at: cloneDir)
         let mainBranch = try await client.currentBranch(at: cloneDir)
-        #expect(mainBranch.isMain)
+        #expect(mainBranch.name == "main")
     }
 
     @Test func deleteBranch() async throws {
@@ -641,12 +703,12 @@ struct SwiftGitXClientTests {
         try GitTestHelper.run(["push"], at: cloneB)
 
         // Before fetch, A doesn't know about B's commit
-        let (_, behindBefore) = try await client.aheadBehind(at: cloneA)
+        let (_, behindBefore) = try await client.aheadBehind(at: cloneA, defaultBranch: "main")
         #expect(behindBefore == 0)
 
         // After fetch, A sees it is behind
         try await client.fetch(at: cloneA)
-        let (_, behindAfter) = try await client.aheadBehind(at: cloneA)
+        let (_, behindAfter) = try await client.aheadBehind(at: cloneA, defaultBranch: "main")
         #expect(behindAfter == 1)
     }
 
@@ -668,7 +730,7 @@ struct SwiftGitXClientTests {
             to: cloneDir.appendingPathComponent("b.md"), atomically: true, encoding: .utf8)
         try await client.commitAll(at: cloneDir, message: "second local")
 
-        let (ahead, behind) = try await client.aheadBehind(at: cloneDir)
+        let (ahead, behind) = try await client.aheadBehind(at: cloneDir, defaultBranch: "main")
         #expect(ahead == 2)
         #expect(behind == 0)
     }
@@ -699,7 +761,7 @@ struct SwiftGitXClientTests {
         // Fetch so A knows about B's commit
         try await client.fetch(at: cloneA)
 
-        let (ahead, behind) = try await client.aheadBehind(at: cloneA)
+        let (ahead, behind) = try await client.aheadBehind(at: cloneA, defaultBranch: "main")
         #expect(ahead == 1)
         #expect(behind == 1)
     }
@@ -889,7 +951,7 @@ struct SwiftGitXClientTests {
 
         // Should still be on main
         let branch = try await client.currentBranch(at: cloneDir)
-        #expect(branch.isMain)
+        #expect(branch.name == "main")
     }
 
     @Test func createDuplicateBranchThrows() async throws {

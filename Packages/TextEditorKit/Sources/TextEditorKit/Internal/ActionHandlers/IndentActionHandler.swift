@@ -75,7 +75,7 @@ struct IndentActionHandler: DocumentEditorActionHandler {
 
         return TextEdit(
             changes: [.delete(lineStart..<(lineStart + spacesToRemove))],
-            selection: selection.shifted(by: -spacesToRemove)
+            selection: selection.shifted(by: -spacesToRemove, floor: lineStart)
         )
     }
 }

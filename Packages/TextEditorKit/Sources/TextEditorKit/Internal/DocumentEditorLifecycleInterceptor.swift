@@ -12,7 +12,9 @@ protocol DocumentEditorLifecycleInterceptor: AnyObject {
 struct LifecycleContext {
 
     enum Event {
+        case didLoad
         case didChangeText
+        case didChangeSelection
         case didSave
         case didCancelEditing
     }

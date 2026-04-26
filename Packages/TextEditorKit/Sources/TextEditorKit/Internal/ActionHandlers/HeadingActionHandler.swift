@@ -13,6 +13,16 @@ struct HeadingActionHandler: DocumentEditorActionHandler {
         return false
     }
 
+    func isEnabled(in context: EditorContext) -> Bool {
+        guard let markdown = context.markdown() else { return true }
+        let tokens = markdown.selectionLineTokens()
+        guard tokens.count <= 1 else { return false }
+        switch tokens.first ?? nil {
+        case nil, .paragraph, .heading: return true
+        default: return false
+        }
+    }
+
     func activate(in context: EditorContext) -> TextEdit? {
         let prefix = String(repeating: "#", count: level) + " "
         let selection = context.selectionOffsets()
@@ -24,7 +34,7 @@ struct HeadingActionHandler: DocumentEditorActionHandler {
             let oldPrefixLength = currentLevel + 1
             return TextEdit(
                 changes: [.replace(range: lineStart..<(lineStart + oldPrefixLength), with: prefix)],
-                selection: selection.shifted(by: prefixUTF16 - oldPrefixLength)
+                selection: selection.shifted(by: prefixUTF16 - oldPrefixLength, floor: lineStart)
             )
         }
 
@@ -46,7 +56,7 @@ struct HeadingActionHandler: DocumentEditorActionHandler {
 
         return TextEdit(
             changes: [.delete(lineStart..<(lineStart + prefixLength))],
-            selection: selection.shifted(by: -prefixLength)
+            selection: selection.shifted(by: -prefixLength, floor: lineStart)
         )
     }
 }

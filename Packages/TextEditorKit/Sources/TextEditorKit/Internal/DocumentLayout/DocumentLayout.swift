@@ -5,7 +5,7 @@ import Foundation
 /// Read-only document coordinate mapping.
 /// Passed to handlers and interceptors via EditorContext.
 @MainActor
-public protocol DocumentLayout: AnyObject {
+protocol DocumentLayout: AnyObject {
     var lineCount: Int { get }
     func lineRange(at line: Int) -> Range<Int>
     func offset(of position: SourcePosition) -> Int

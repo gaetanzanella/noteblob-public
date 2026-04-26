@@ -131,10 +131,18 @@ public final class NoteService: Sendable {
     public func moveItem(in folder: Folder, at path: RelativePath, to destinationPath: RelativePath)
         throws
     {
-        let sourceURL = localPathProvider.localPath(for: folder).appendingPathComponent(path.value)
-        let destinationURL = localPathProvider.localPath(for: folder)
+        try moveItem(from: folder, at: path, to: folder, at: destinationPath)
+    }
+
+    public func moveItem(
+        from sourceFolder: Folder, at sourcePath: RelativePath,
+        to destinationFolder: Folder, at destinationPath: RelativePath
+    ) throws {
+        let sourceURL = localPathProvider.localPath(for: sourceFolder)
+            .appendingPathComponent(sourcePath.value)
+        let destinationURL = localPathProvider.localPath(for: destinationFolder)
             .appendingPathComponent(destinationPath.value)
-            .appendingPathComponent(path.lastComponent)
+            .appendingPathComponent(sourcePath.lastComponent)
         try fileRepository.moveItem(at: sourceURL, to: destinationURL)
     }
 

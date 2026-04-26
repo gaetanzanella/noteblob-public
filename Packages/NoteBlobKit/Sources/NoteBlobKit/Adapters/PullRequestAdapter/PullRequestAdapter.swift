@@ -23,8 +23,16 @@ struct MergePullRequestRequest: Sendable {
     let credentials: Credentials
 }
 
+struct DeleteBranchRequest: Sendable {
+    let owner: String
+    let repo: String
+    let branch: String
+    let credentials: Credentials
+}
+
 protocol PullRequestAdapter: Sendable {
     func listPullRequests(_ request: ListPullRequestsRequest) async throws -> [PullRequest]
     func createPullRequest(_ request: CreatePullRequestRequest) async throws -> PullRequest
     func mergePullRequest(_ request: MergePullRequestRequest) async throws
+    func deleteRemoteBranch(_ request: DeleteBranchRequest) async throws
 }

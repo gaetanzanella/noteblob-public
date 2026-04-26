@@ -72,22 +72,12 @@ final class SwiftGitXClient: GitClient, Sendable {
         try await queue.enqueue(for: localPath) { [self] in
             let repo = try GitRepo.open(at: localPath)
             try ensureIdentity(repo)
-
             let entries = try repo.status()
-            for entry in entries {
-                for status in entry.status {
-                    switch status {
-                    case .workingTreeNew, .workingTreeModified, .workingTreeDeleted:
-                        if let path = entry.workingTree?.newFile.path {
-                            try repo.add(path: path)
-                        }
-                    default:
-                        break
-                    }
-                }
-            }
 
-            try repo.commit(message: message)
+            // Stage and commit through a single raw libgit2 handle.
+            // SwiftGitX's index remove is internal, so we use libgit2
+            // directly for the whole operation to avoid index cache conflicts.
+            try stageAndCommit(at: localPath, entries: entries, message: message)
         }
     }
 
@@ -124,6 +114,48 @@ final class SwiftGitXClient: GitClient, Sendable {
     }
 
     // MARK: - Private Helpers
+
+    private func stageAndCommit(
+        at localPath: URL,
+        entries: some Sequence<SwiftGitX.StatusEntry>,
+        message: String
+    ) throws {
+        var repoPointer: OpaquePointer?
+        guard git_repository_open(&repoPointer, localPath.path) == 0, let repoPointer else {
+            throw GitClientError.commandFailed(command: "commit", output: "Failed to open repository")
+        }
+        defer { git_repository_free(repoPointer) }
+
+        var indexPointer: OpaquePointer?
+        guard git_repository_index(&indexPointer, repoPointer) == 0, let indexPointer else {
+            throw GitClientError.commandFailed(command: "commit", output: "Failed to read index")
+        }
+        defer { git_index_free(indexPointer) }
+
+        for entry in entries {
+            for status in entry.status {
+                guard let path = entry.workingTree?.newFile.path else { continue }
+                switch status {
+                case .workingTreeNew, .workingTreeModified:
+                    git_index_add_bypath(indexPointer, path)
+                case .workingTreeDeleted:
+                    git_index_remove_bypath(indexPointer, path)
+                default:
+                    break
+                }
+            }
+        }
+        git_index_write(indexPointer)
+
+        var oid = git_oid()
+        var options = git_commit_create_options()
+        options.version = UInt32(GIT_COMMIT_CREATE_OPTIONS_VERSION)
+        let result = git_commit_create_from_stage(&oid, repoPointer, message, &options)
+        guard result == 0 else {
+            let errorMessage = String(cString: git_error_last().pointee.message)
+            throw GitClientError.commandFailed(command: "commit", output: errorMessage)
+        }
+    }
 
     private func ensureIdentity(_ repo: GitRepo) throws {
         let hasName = (try? repo.config.string(forKey: "user.name")) != nil

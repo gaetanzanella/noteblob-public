@@ -3,6 +3,7 @@ import Foundation
 final class FileSystemFolderRepository: FolderRepository, Sendable {
 
     private let localPathProvider: FolderLocalPathProvider
+    private let configStore = FolderConfigStore()
 
     init(localPathProvider: FolderLocalPathProvider) {
         self.localPathProvider = localPathProvider
@@ -38,6 +39,7 @@ final class FileSystemFolderRepository: FolderRepository, Sendable {
     func add(_ folder: Folder) throws {
         let path = localPathProvider.localPath(for: folder)
         try FileManager.default.createDirectory(at: path, withIntermediateDirectories: true)
+        saveConfig(for: folder)
     }
 
     func remove(_ folder: Folder) throws {
@@ -46,6 +48,12 @@ final class FileSystemFolderRepository: FolderRepository, Sendable {
     }
 
     // MARK: - Private
+
+    private func saveConfig(for folder: Folder) {
+        guard let defaultBranch = folder.defaultBranch else { return }
+        let config = FolderConfigDTO(defaultBranch: defaultBranch)
+        configStore.save(config, at: localPathProvider.localPath(for: folder))
+    }
 
     private func scanLocalFolders(at localURL: URL) throws -> [Folder] {
         let contents = try FileManager.default.contentsOfDirectory(
@@ -66,7 +74,11 @@ final class FileSystemFolderRepository: FolderRepository, Sendable {
         )
         return contents
             .filter { isDirectory($0) && hasGitDirectory($0) }
-            .map { Folder(repository: Repository(owner: owner, name: $0.lastPathComponent)) }
+            .map {
+                let config = configStore.load(at: $0)
+                let repository = Repository(owner: owner, name: $0.lastPathComponent)
+                return Folder(repository: repository, defaultBranch: config.defaultBranch)
+            }
     }
 
     private func isDirectory(_ url: URL) -> Bool {

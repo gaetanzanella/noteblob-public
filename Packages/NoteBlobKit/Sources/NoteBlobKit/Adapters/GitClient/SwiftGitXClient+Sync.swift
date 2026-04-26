@@ -52,17 +52,17 @@ extension SwiftGitXClient {
 
     // MARK: - Remote Comparison
 
-    func aheadBehind(at localPath: URL) async throws -> (ahead: Int, behind: Int) {
+    func aheadBehind(at localPath: URL, defaultBranch: String) async throws -> (ahead: Int, behind: Int) {
         try await queue.enqueue(for: localPath) {
             let repo = try LibGit2Repository(at: localPath)
 
             return try repo.withHead { headRef in
-                // Try upstream first; fall back to main branch for unpushed branches.
+                // Try upstream first; fall back to default branch for unpushed branches.
                 var compareRef: OpaquePointer?
                 var upstreamResult = git_branch_upstream(&compareRef, headRef)
                 if upstreamResult < 0 {
                     upstreamResult = git_branch_lookup(
-                        &compareRef, repo.pointer, "main", GIT_BRANCH_LOCAL)
+                        &compareRef, repo.pointer, defaultBranch, GIT_BRANCH_LOCAL)
                     if upstreamResult < 0 {
                         return (0, 0)
                     }

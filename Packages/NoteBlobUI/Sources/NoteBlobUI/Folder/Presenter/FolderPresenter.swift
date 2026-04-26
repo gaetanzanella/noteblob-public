@@ -34,6 +34,7 @@ public struct MoveNavigationPayload {
 public enum FolderRedirection {
     case folder(FolderNavigationPayload)
     case note(NoteNavigationPayload)
+    case deeplink(NoteNavigationPayload)
     case doubleTap(NoteNavigationPayload)
     case quickLook(URL)
     case newNote
@@ -233,7 +234,7 @@ public final class FolderPresenter {
             }
         case .delete(let id):
             guard let item = state.items.first(where: { $0.path.value == id }) else { return }
-            deleteItem(item)
+            confirmDelete([item])
         case .rename(let id, let newName):
             guard let item = state.items.first(where: { $0.path.value == id }) else { return }
             renameItem(item, newName: newName)
@@ -256,12 +257,10 @@ public final class FolderPresenter {
             selectedIDs = []
             loadItems()
         case .deleteSelected:
-            for id in selectedIDs {
-                guard let item = state.items.first(where: { $0.path.value == id }) else { continue }
-                deleteItem(item)
+            let items = selectedIDs.compactMap { id in
+                state.items.first(where: { $0.path.value == id })
             }
-            isEditing = false
-            selectedIDs = []
+            confirmDelete(items)
         case .moveItemsToFolder(let paths, let destinationFolder, let destinationPath):
             do {
                 try noteService.moveItems(in: destinationFolder, paths: paths, to: destinationPath)
@@ -277,7 +276,7 @@ public final class FolderPresenter {
                 state.alert = .error(error.localizedDescription)
             }
         case .selectRecentNote(let payload):
-            onRedirection(.note(payload))
+            onRedirection(.deeplink(payload))
         case .dismissError:
             state.alert = nil
         }
@@ -333,13 +332,25 @@ public final class FolderPresenter {
         }
     }
 
-    private func deleteItem(_ item: NoteItem) {
-        do {
-            try noteService.deleteNote(in: state.payload.folder, at: item.path)
-            loadItems()
-        } catch {
-            state.alert = .error(error.localizedDescription)
+    private func confirmDelete(_ items: [NoteItem]) {
+        guard !items.isEmpty else { return }
+        state.alert = Alerts.confirmDeleteItems(count: items.count) { [weak self] in
+            self?.performDelete(items)
         }
+    }
+
+    private func performDelete(_ items: [NoteItem]) {
+        for item in items {
+            do {
+                try noteService.deleteNote(in: state.payload.folder, at: item.path)
+            } catch {
+                state.alert = .error(error.localizedDescription)
+                return
+            }
+        }
+        isEditing = false
+        selectedIDs = []
+        loadItems()
     }
 
     private func startMoveRedirection(ids: Set<String>) {
@@ -379,7 +390,10 @@ public final class FolderPresenter {
         syncSubscription = publisher.subscribe { [weak self] event in
             guard let self else { return }
             switch event {
-            case .didPull(let eventFolder), .didMerge(let eventFolder):
+            case .didPull(let eventFolder),
+                    .didMerge(let eventFolder),
+                    .didDiscard(let eventFolder),
+                    .didDelete(let eventFolder):
                 guard eventFolder.id == folder.id else { return }
                 Task { @MainActor in
                     self.handleSyncCompleted()

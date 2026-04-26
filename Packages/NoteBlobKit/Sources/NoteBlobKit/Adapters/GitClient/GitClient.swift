@@ -5,7 +5,7 @@ protocol GitClient: Sendable {
     func pull(at localPath: URL) async throws
     func push(at localPath: URL) async throws
     func fetch(at localPath: URL) async throws
-    func aheadBehind(at localPath: URL) async throws -> (ahead: Int, behind: Int)
+    func aheadBehind(at localPath: URL, defaultBranch: String) async throws -> (ahead: Int, behind: Int)
     func pendingChanges(at localPath: URL) async throws -> [Change]
     func commitAll(at localPath: URL, message: String) async throws
     func currentBranch(at localPath: URL) async throws -> BranchInfo

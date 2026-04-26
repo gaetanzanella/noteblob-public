@@ -172,6 +172,32 @@ struct GrepContentSearchAdapterTests {
         #expect(results.first?.path == "visible.md")
     }
 
+    @Test func searchDiacriticMatchWithLeadingNewlines() async throws {
+        let root = try makeTempDir()
+        try writeFile(at: root, path: "note.md", content: "\n\n  café latte\n\n")
+
+        let adapter = GrepContentSearchAdapter(rootURL: root)
+        let results = try await adapter.search(query: "cafe")
+
+        #expect(results.count == 1)
+        let snippet = try #require(results.first?.snippet)
+        let matched = String(snippet.text[snippet.matchRange])
+        #expect(matched == "café")
+    }
+
+    @Test func searchDiacriticMatchAfterNewlines() async throws {
+        let root = try makeTempDir()
+        try writeFile(at: root, path: "note.md", content: "hello\n\nworld\n\nrésumé of the day")
+
+        let adapter = GrepContentSearchAdapter(rootURL: root)
+        let results = try await adapter.search(query: "resume")
+
+        #expect(results.count == 1)
+        let snippet = try #require(results.first?.snippet)
+        let matched = String(snippet.text[snippet.matchRange])
+        #expect(matched == "résumé")
+    }
+
     @Test func searchSkipsBinaryFiles() async throws {
         let root = try makeTempDir()
         let binaryURL = root.appendingPathComponent("image.png")

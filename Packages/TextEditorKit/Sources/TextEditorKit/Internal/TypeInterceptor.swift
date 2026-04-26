@@ -20,9 +20,9 @@ protocol TypeInterceptor {
 struct TypeContext {
     let replacementString: String
     let editorContext: EditorContext
+    let changedRange: Range<Int>
     private let previousText: String
     private let newText: String
-    private let changedRange: Range<Int>
 
     init(
         previousText: String,
@@ -48,5 +48,15 @@ struct TypeContext {
 
     var isDeletion: Bool {
         replacementString.isEmpty && changedRange.count > 0
+    }
+
+    /// Text that was replaced (the originally-selected text before the change).
+    /// Empty if nothing was selected.
+    var replacedText: String {
+        guard changedRange.count > 0 else { return "" }
+        let ns = previousText as NSString
+        let nsRange = NSRange(location: changedRange.lowerBound, length: changedRange.count)
+        guard nsRange.location >= 0, nsRange.location + nsRange.length <= ns.length else { return "" }
+        return ns.substring(with: nsRange)
     }
 }

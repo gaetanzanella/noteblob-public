@@ -390,6 +390,171 @@ struct NavigationStateTests {
         #expect(nav.currentFolder == otherPayload)
         #expect(nav.selectedNote == nil)
     }
+
+    // MARK: - Note stack (inter-note links)
+
+    @Test(.tags(.threeColumn, .stack))
+    func hasStackedNotesFalseInitially() {
+        let nav = NavigationState()
+        #expect(!nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func hasStackedNotesFalseAfterSingleSelect() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("note.md"))
+        #expect(!nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func stackNoteChangesSelectedNoteAndSetsFlag() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("a.md"))
+        nav.stackNote(notePayload("b.md"))
+        #expect(nav.selectedNote == notePayload("b.md"))
+        #expect(nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func stackNoteLeavesFolderContextOnBottomNote() {
+        // Stacking must not rebuild contentPath or rewrite itemSelections —
+        // the folder breadcrumb stays anchored to the note at the bottom of
+        // the stack so the user returns to the same context on unstack.
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.pushFolder(folderPayload("a"))
+        nav.selectNote(notePayload("a/bottom.md"))
+        let folderBefore = nav.currentFolder
+        let selectionBefore = nav.selectedItem(for: RelativePath("a"))
+
+        nav.stackNote(notePayload("b/top.md"))
+
+        #expect(nav.currentFolder == folderBefore)
+        #expect(nav.selectedItem(for: RelativePath("a")) == selectionBefore)
+        // The stacked note's folder must not be visually highlighted — the
+        // three-column fallback in `selectedItem` anchors on the bottom note,
+        // not the displayed (top) one.
+        #expect(nav.selectedItem(for: RelativePath("b")) == nil)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func stackNoteIsNoOpWhenTargetMatchesSelected() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("a.md"))
+        nav.stackNote(notePayload("a.md"))
+        #expect(!nav.hasStackedNotes)
+        #expect(nav.selectedNote == notePayload("a.md"))
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func stackMultipleNotesBuildsDeepStack() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("a.md"))
+        nav.stackNote(notePayload("b.md"))
+        nav.stackNote(notePayload("c.md"))
+        #expect(nav.selectedNote == notePayload("c.md"))
+        #expect(nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func unstackNoteRevealsPreviousNote() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("a.md"))
+        nav.stackNote(notePayload("b.md"))
+        nav.unstackNote()
+        #expect(nav.selectedNote == notePayload("a.md"))
+        #expect(!nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func unstackNoteUnwindsOneLevelAtATime() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("a.md"))
+        nav.stackNote(notePayload("b.md"))
+        nav.stackNote(notePayload("c.md"))
+
+        nav.unstackNote()
+        #expect(nav.selectedNote == notePayload("b.md"))
+        #expect(nav.hasStackedNotes)
+
+        nav.unstackNote()
+        #expect(nav.selectedNote == notePayload("a.md"))
+        #expect(!nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func unstackNoteIsNoOpWhenEmpty() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.unstackNote()
+        #expect(nav.selectedNote == nil)
+        nav.selectNote(notePayload("a.md"))
+        nav.unstackNote()
+        #expect(nav.selectedNote == notePayload("a.md"))
+        #expect(!nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func selectNoteResetsStack() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("a.md"))
+        nav.stackNote(notePayload("b.md"))
+        nav.selectNote(notePayload("c.md"))
+        #expect(nav.selectedNote == notePayload("c.md"))
+        #expect(!nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func deeplinkToNoteResetsStack() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("a.md"))
+        nav.stackNote(notePayload("b.md"))
+        nav.deeplinkToNote(notePayload("c/d.md"))
+        #expect(nav.selectedNote == notePayload("c/d.md"))
+        #expect(!nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func deselectNoteClearsStack() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("a.md"))
+        nav.stackNote(notePayload("b.md"))
+        nav.deselectNote()
+        #expect(nav.selectedNote == nil)
+        #expect(!nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func resetContentClearsStack() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("a.md"))
+        nav.stackNote(notePayload("b.md"))
+        nav.resetContent()
+        #expect(nav.selectedNote == nil)
+        #expect(!nav.hasStackedNotes)
+    }
+
+    @Test(.tags(.threeColumn, .stack))
+    func selectRootFolderChangeClearsStack() {
+        var nav = NavigationState()
+        nav.selectRootFolder(rootPayload)
+        nav.selectNote(notePayload("a.md"))
+        nav.stackNote(notePayload("b.md"))
+        let otherFolder = Folder(localName: "other")
+        nav.selectRootFolder(FolderNavigationPayload(folder: otherFolder))
+        #expect(nav.selectedNote == nil)
+        #expect(!nav.hasStackedNotes)
+    }
 }
 
 // MARK: - Tags

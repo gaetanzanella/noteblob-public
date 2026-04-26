@@ -5,6 +5,7 @@ struct NewNoteSheet: View {
     let folderName: String
     let onCreate: (String) -> Void
     @State private var filename = ""
+    @FocusState private var isFilenameFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -33,6 +34,7 @@ struct NewNoteSheet: View {
                 Text("new_note.filename.placeholder", bundle: .module)
             }
             .textFieldStyle(.roundedBorder)
+            .focused($isFilenameFocused)
 
             Text("new_note.extension_hint", bundle: .module)
                 .font(.callout)
@@ -59,6 +61,7 @@ struct NewNoteSheet: View {
         }
         .scenePadding()
         .frame(minWidth: 350, minHeight: 200)
+        .task { isFilenameFocused = true }
     }
     #endif
 
@@ -71,12 +74,14 @@ struct NewNoteSheet: View {
                 TextField(text: $filename) {
                     Text("new_note.filename.placeholder", bundle: .module)
                 }
+                .focused($isFilenameFocused)
                 Text("new_note.extension_hint", bundle: .module)
                     .foregroundStyle(.secondary)
             }
             .navigationTitle(Text("new_note.title", bundle: .module))
             .navigationSubtitle(folderName)
             .navigationBarTitleDisplayMode(.inline)
+            .task { isFilenameFocused = true }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: {

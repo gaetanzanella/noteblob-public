@@ -6,4 +6,5 @@ public enum NoteBlobError: Error, Equatable {
     case syncFailed(String)
     case mergeConflict(prURL: String)
     case invalidOperation(String)
+    case folderAlreadyInstalled
 }

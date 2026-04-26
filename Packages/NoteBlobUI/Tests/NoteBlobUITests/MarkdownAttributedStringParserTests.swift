@@ -149,6 +149,16 @@ struct MarkdownAttributedStringParserTests {
         )
         b.assertEqual(result, exp)
     }
+
+    @Test func relativePathLinkIsTappable() {
+        let result = parser.parse("[note](folder/other.md)")
+        var foundLink: URL?
+        result.enumerateAttribute(.link, in: NSRange(location: 0, length: result.length)) { value, _, _ in
+            if let url = value as? URL { foundLink = url }
+        }
+        #expect(foundLink == URL(string: "folder/other.md"))
+        #expect(foundLink?.scheme == nil)
+    }
 }
 
 // MARK: - Builder

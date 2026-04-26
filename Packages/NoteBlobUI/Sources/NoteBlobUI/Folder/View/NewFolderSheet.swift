@@ -5,6 +5,7 @@ struct NewFolderSheet: View {
     let folderName: String
     let onCreate: (String) -> Void
     @State private var name = ""
+    @FocusState private var isNameFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -33,6 +34,7 @@ struct NewFolderSheet: View {
                 Text("new_folder.name.placeholder", bundle: .module)
             }
             .textFieldStyle(.roundedBorder)
+            .focused($isNameFocused)
 
             Spacer()
 
@@ -55,6 +57,7 @@ struct NewFolderSheet: View {
         }
         .scenePadding()
         .frame(minWidth: 350, minHeight: 180)
+        .task { isNameFocused = true }
     }
     #endif
 
@@ -67,10 +70,12 @@ struct NewFolderSheet: View {
                 TextField(text: $name) {
                     Text("new_folder.name.placeholder", bundle: .module)
                 }
+                .focused($isNameFocused)
             }
             .navigationTitle(Text("new_folder.title", bundle: .module))
             .navigationSubtitle(folderName)
             .navigationBarTitleDisplayMode(.inline)
+            .task { isNameFocused = true }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: {

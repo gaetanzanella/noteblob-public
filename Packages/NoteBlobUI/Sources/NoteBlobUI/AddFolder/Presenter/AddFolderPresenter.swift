@@ -9,13 +9,14 @@ public enum AddFolderMode: Sendable {
 public enum AddFolderViewAction {
     case editName(String)
     case editSearchQuery(String)
-    case search
     case selectResult(String?)
     case add
+    case next
 }
 
 public enum AddFolderRedirection {
     case dismiss
+    case branchPicker(Repository)
 }
 
 struct LocalFolderViewModel {
@@ -59,11 +60,12 @@ public final class AddFolderPresenter {
     private var name = ""
     private var searchQuery = ""
     private var selectedResult: String?
-    private var searchResults: [Folder] = []
+    private var searchResults: [Repository] = []
     private var isSearching = false
     private var isAdding = false
     private var hasSearched = false
     private var errorMessage: String?
+    private var searchTask: Task<Void, Never>?
 
     public init(
         mode: AddFolderMode,
@@ -86,7 +88,7 @@ public final class AddFolderPresenter {
         } else if hasSearched && searchResults.isEmpty {
             state = .noResults
         } else if !searchResults.isEmpty {
-            state = .results(searchResults.map { .init(id: $0.id) })
+            state = .results(searchResults.map { .init(id: "\($0.owner)/\($0.name)") })
         } else {
             state = .idle
         }
@@ -106,37 +108,36 @@ public final class AddFolderPresenter {
         case .editSearchQuery(let value):
             searchQuery = value
             selectedResult = nil
-        case .search:
-            Task { await search() }
+            searchTask?.cancel()
+            searchTask = Task {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard !Task.isCancelled else { return }
+                await search()
+            }
         case .selectResult(let id):
             selectedResult = id
+            #if os(iOS)
+            on(.next)
+            #endif
         case .add:
             Task { await add() }
+        case .next:
+            guard let id = selectedResult,
+                  let repository = searchResults.first(where: { "\($0.owner)/\($0.name)" == id }) else { return }
+            onRedirection(.branchPicker(repository))
         }
     }
 
     // MARK: - Private
 
     private func add() async {
+        guard mode == .local else { return }
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
         errorMessage = nil
         isAdding = true
         do {
-            switch mode {
-            case .local:
-                let trimmed = name.trimmingCharacters(in: .whitespaces)
-                guard !trimmed.isEmpty else {
-                    isAdding = false
-                    return
-                }
-                try await folderSyncService.add(Folder(localName: trimmed))
-            case .github:
-                guard let id = selectedResult,
-                      let folder = searchResults.first(where: { $0.id == id }) else {
-                    isAdding = false
-                    return
-                }
-                try await folderSyncService.add(folder)
-            }
+            try await folderSyncService.add(Folder(localName: trimmed))
             onRedirection(.dismiss)
         } catch {
             errorMessage = error.localizedDescription
@@ -155,7 +156,7 @@ public final class AddFolderPresenter {
         errorMessage = nil
         selectedResult = nil
         do {
-            searchResults = try await folderSyncService.searchFolders(query: query)
+            searchResults = try await folderSyncService.searchRepositories(query: query)
         } catch {
             errorMessage = error.localizedDescription
         }

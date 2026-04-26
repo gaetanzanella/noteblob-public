@@ -81,7 +81,7 @@ public struct StatusCoordinator: View {
             }
         }
         #if os(macOS)
-        .frame(minWidth: 450, minHeight: 350)
+        .frame(minWidth: 550, minHeight: 450)
         #endif
     }
 }

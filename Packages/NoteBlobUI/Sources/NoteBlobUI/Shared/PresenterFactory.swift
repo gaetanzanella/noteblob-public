@@ -75,6 +75,26 @@ public final class PresenterFactory {
         )
     }
 
+    public func makeCreateRepositoryPresenter(
+        onRedirection: @escaping (CreateRepositoryRedirection) -> Void
+    ) -> CreateRepositoryPresenter {
+        CreateRepositoryPresenter(
+            folderSyncService: dependencyProvider.makeFolderSyncService(),
+            onRedirection: onRedirection
+        )
+    }
+
+    public func makeBranchPickerPresenter(
+        payload: BranchPickerNavigationPayload,
+        onRedirection: @escaping (BranchPickerRedirection) -> Void
+    ) -> BranchPickerPresenter {
+        BranchPickerPresenter(
+            payload: payload,
+            folderSyncService: dependencyProvider.makeFolderSyncService(),
+            onRedirection: onRedirection
+        )
+    }
+
     public func makeFolderPresenter(
         payload: FolderNavigationPayload,
         selection: @escaping () -> String? = { nil },
@@ -126,13 +146,38 @@ public final class PresenterFactory {
         )
     }
 
+    public func makeNoteLinkPickerPresenter(
+        payload: NoteLinkPickerNavigationPayload
+    ) -> NoteLinkPickerPresenter {
+        NoteLinkPickerPresenter(
+            folder: payload.folder,
+            excluding: payload.excluding,
+            noteService: dependencyProvider.makeNoteService(for: payload.folder),
+            onSelected: payload.onSelected
+        )
+    }
+
+    public func makeURLLinkPresenter(
+        payload: URLLinkNavigationPayload
+    ) -> URLLinkPresenter {
+        URLLinkPresenter(onConfirmed: payload.onConfirmed)
+    }
+
+    public func makeTableEditorPresenter(
+        payload: TableEditorNavigationPayload
+    ) -> TableEditorPresenter {
+        TableEditorPresenter(payload: payload)
+    }
+
     public func makeMoveDestinationPresenter(
         payload: MoveNavigationPayload,
         onRedirection: @escaping (MoveDestinationRedirection) -> Void
     ) -> MoveDestinationPresenter {
-        MoveDestinationPresenter(
+        let provider = dependencyProvider
+        return MoveDestinationPresenter(
             payload: payload,
-            noteService: dependencyProvider.makeNoteService(for: payload.folder),
+            folderSyncService: provider.makeFolderSyncService(),
+            makeNoteService: { provider.makeNoteService(for: $0) },
             onRedirection: onRedirection
         )
     }

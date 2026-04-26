@@ -16,16 +16,11 @@ struct SyncActionView: View {
 
     var body: some View {
         let vm = presenter.viewModel()
-        Group {
+        Button { presenter.on(.showDetail) } label: {
             if vm.isLoading {
-                Button {} label: {
-                    ProgressView().controlSize(.small)
-                }
-                .disabled(true)
+                ProgressView().controlSize(.small)
             } else {
-                Button { presenter.on(.showDetail) } label: {
-                    syncIcon(for: vm.syncAction)
-                }
+                syncIcon(for: vm.syncAction)
             }
         }
         .onAppear { presenter.on(.load) }

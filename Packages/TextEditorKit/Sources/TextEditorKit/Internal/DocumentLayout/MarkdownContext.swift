@@ -5,7 +5,7 @@ import Foundation
 /// Provides markdown-specific query methods.
 /// Accessed via `context.markdown()` on EditorContext.
 @MainActor
-public struct MarkdownContext {
+struct MarkdownContext {
 
     // MARK: - Properties
 
@@ -22,27 +22,31 @@ public struct MarkdownContext {
     // MARK: - Token Queries
 
     /// Returns the token for the current line (line containing selection start)
-    public func currentTopLineToken() -> MarkdownLineToken? {
+    func currentTopLineToken() -> MarkdownLineToken? {
         storage.lineToken(at: selection.lowerBound.line)
     }
 
     /// Returns the token for a specific line number (0-based)
-    public func topLineToken(at line: Int) -> MarkdownLineToken? {
+    func topLineToken(at line: Int) -> MarkdownLineToken? {
         storage.lineToken(at: line)
     }
 
+    /// Returns the tokens for every line touched by the selection, from
+    /// `selection.lowerBound.line` through `selection.upperBound.line` inclusive.
+    func selectionLineTokens() -> [MarkdownLineToken?] {
+        let startLine = selection.lowerBound.line
+        let endLine = selection.upperBound.line
+        guard startLine <= endLine else { return [] }
+        return (startLine...endLine).map { storage.lineToken(at: $0) }
+    }
+
     /// Returns inline formatting tokens at the selection start
-    public func currentInlineTokens() -> MarkdownInlineToken {
+    func currentInlineTokens() -> MarkdownInlineToken {
         storage.inlineTokens(at: selection.lowerBound)
     }
 
-    /// Returns the UTF-16 offset range of an inline formatting node at the selection.
-    public func currentInlineRange(for token: MarkdownInlineToken) -> Range<Int>? {
-        storage.inlineRange(at: selection.lowerBound, token: token)
-    }
-
     /// Returns list item info for the current line if it's a list item
-    public func currentListItemInfo() -> MarkdownLineToken.ListItemInfo? {
+    func currentListItemInfo() -> MarkdownLineToken.ListItemInfo? {
         if case .listItem(let info) = currentTopLineToken() {
             return info
         }

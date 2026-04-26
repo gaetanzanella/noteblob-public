@@ -34,7 +34,7 @@ struct FolderSyncServiceTests {
         )
     }
 
-    private let testFolder = Folder(repository: Repository(owner: "test", name: "remote"))
+    private let testFolder = Folder(repository: Repository(owner: "test", name: "remote"), defaultBranch: "main")
 
 
     // MARK: - Tests
@@ -55,7 +55,7 @@ struct FolderSyncServiceTests {
         // Check status works on the cloned repo
         let status = try await services.syncService.status(for: testFolder)
         #expect(status.state == .upToDate)
-        #expect(status.branch.isMain)
+        #expect(status.branch.name == "main")
 
         // NoteService should be able to list cloned files
         let items = try services.noteService.listItems(in: testFolder, at: .root)
@@ -74,7 +74,7 @@ struct FolderSyncServiceTests {
 
         let status = try await services.syncService.status(for: testFolder)
         #expect(status.state == .upToDate)
-        #expect(status.branch.isMain)
+        #expect(status.branch.name == "main")
     }
 
     @Test func statusLocalChanges() async throws {
@@ -107,7 +107,7 @@ struct FolderSyncServiceTests {
 
         // Should now be on a noteblob/ branch
         let status = try await services.syncService.status(for: testFolder)
-        #expect(!status.branch.isMain)
+        #expect(status.branch.name != "main")
         #expect(status.branch.name.hasPrefix("noteblob/"))
         // Should have unpushed commits
         #expect(status.state == .pushNeeded)
@@ -151,7 +151,7 @@ struct FolderSyncServiceTests {
         try await servicesA.syncService.commit(in: testFolder, message: "A's commit")
         let statusAfterCommit = try await servicesA.syncService.status(for: testFolder)
         #expect(statusAfterCommit.state == .pushNeeded)
-        #expect(!statusAfterCommit.branch.isMain)
+        #expect(statusAfterCommit.branch.name != "main")
 
         // A pushes (from branch)
         try await servicesA.syncService.push(testFolder)
@@ -263,7 +263,7 @@ struct FolderSyncServiceTests {
         // After merge: back on main, up to date, branch deleted
         let statusAfterMerge = try await services.syncService.status(for: testFolder)
         #expect(statusAfterMerge.state == .upToDate)
-        #expect(statusAfterMerge.branch.isMain)
+        #expect(statusAfterMerge.branch.name == "main")
 
         // The file should still exist
         let items = try services.noteService.listItems(in: testFolder, at: .root)
@@ -343,7 +343,138 @@ struct FolderSyncServiceTests {
 
         let status = try await services.syncService.status(for: testFolder)
         #expect(status.state == .upToDate)
-        #expect(status.branch.isMain)
+        #expect(status.branch.name == "main")
+    }
+
+    @Test func mergeAlreadyMergedOnGitHub() async throws {
+        let baseDir = try makeTempDir()
+        defer { try? FileManager.default.removeItem(at: baseDir) }
+
+        try GitTestHelper.createBareRemote(in: baseDir)
+        let cloneDir = baseDir.appendingPathComponent("clone")
+        let mockPR = MockPullRequestAdapter(bareRepoPath: baseDir.appendingPathComponent("remote.git"))
+        let services = makeServices(cloneDir: cloneDir, baseDir: baseDir, pullRequestAdapter: mockPR)
+        try await services.syncService.add(testFolder)
+
+        // Create, commit, push
+        try services.noteService.createNote(in: testFolder, at: .root, name: "already-merged")
+        try await services.syncService.commit(in: testFolder, message: "will be merged remotely")
+        try await services.syncService.push(testFolder)
+
+        let branchName = try await services.syncService.status(for: testFolder).branch.name
+
+        // Simulate GitHub web merge — main is fast-forwarded in the bare repo
+        try mockPR.simulateRemoteMerge(branch: branchName)
+        // After remote merge, createPullRequest would return 422 (no diff)
+        mockPR.shouldFailCreateNoDiff = true
+
+        // App calls merge — should detect already merged and just clean up
+        try await services.syncService.merge(testFolder)
+
+        let status = try await services.syncService.status(for: testFolder)
+        #expect(status.state == .upToDate)
+        #expect(status.branch.name == "main")
+
+        // The file should still exist after pulling main
+        let items = try services.noteService.listItems(in: testFolder, at: .root)
+        #expect(items.map(\.name).contains("already-merged.md"))
+    }
+
+    @Test func mergeDeletesRemoteBranch() async throws {
+        let baseDir = try makeTempDir()
+        defer { try? FileManager.default.removeItem(at: baseDir) }
+
+        try GitTestHelper.createBareRemote(in: baseDir)
+        let cloneDir = baseDir.appendingPathComponent("clone")
+        let mockPR = MockPullRequestAdapter(bareRepoPath: baseDir.appendingPathComponent("remote.git"))
+        let services = makeServices(cloneDir: cloneDir, baseDir: baseDir, pullRequestAdapter: mockPR)
+        try await services.syncService.add(testFolder)
+
+        // Create, commit, push, merge
+        try services.noteService.createNote(in: testFolder, at: .root, name: "delete-branch")
+        try await services.syncService.commit(in: testFolder, message: "test branch deletion")
+        try await services.syncService.push(testFolder)
+
+        let branchName = try await services.syncService.status(for: testFolder).branch.name
+
+        try await services.syncService.merge(testFolder)
+
+        // The remote branch should have been deleted
+        #expect(mockPR.deletedBranches.contains(branchName))
+    }
+
+    @Test func mergeNewCommitsAfterPreviousMerge() async throws {
+        let baseDir = try makeTempDir()
+        defer { try? FileManager.default.removeItem(at: baseDir) }
+
+        try GitTestHelper.createBareRemote(in: baseDir)
+        let cloneDir = baseDir.appendingPathComponent("clone")
+        let mockPR = MockPullRequestAdapter(bareRepoPath: baseDir.appendingPathComponent("remote.git"))
+        let services = makeServices(cloneDir: cloneDir, baseDir: baseDir, pullRequestAdapter: mockPR)
+        try await services.syncService.add(testFolder)
+
+        // First round: create, commit, push, merge
+        try services.noteService.createNote(in: testFolder, at: .root, name: "round1")
+        try await services.syncService.commit(in: testFolder, message: "round 1")
+        try await services.syncService.push(testFolder)
+        try await services.syncService.merge(testFolder)
+
+        let statusAfterFirst = try await services.syncService.status(for: testFolder)
+        #expect(statusAfterFirst.branch.name == "main")
+
+        // Second round: new commits on a new branch
+        try services.noteService.createNote(in: testFolder, at: .root, name: "round2")
+        try await services.syncService.commit(in: testFolder, message: "round 2")
+        try await services.syncService.push(testFolder)
+
+        let statusBeforeSecondMerge = try await services.syncService.status(for: testFolder)
+        #expect(statusBeforeSecondMerge.state == .readyToMerge)
+
+        // Second merge — should create a new PR and merge normally
+        try await services.syncService.merge(testFolder)
+
+        let statusAfterSecond = try await services.syncService.status(for: testFolder)
+        #expect(statusAfterSecond.state == .upToDate)
+        #expect(statusAfterSecond.branch.name == "main")
+
+        // Both files should exist
+        let items = try services.noteService.listItems(in: testFolder, at: .root)
+        let names = items.map(\.name)
+        #expect(names.contains("round1.md"))
+        #expect(names.contains("round2.md"))
+    }
+
+    @Test func mergeWithClosedPRCreatesNewOne() async throws {
+        let baseDir = try makeTempDir()
+        defer { try? FileManager.default.removeItem(at: baseDir) }
+
+        try GitTestHelper.createBareRemote(in: baseDir)
+        let cloneDir = baseDir.appendingPathComponent("clone")
+        let mockPR = MockPullRequestAdapter(bareRepoPath: baseDir.appendingPathComponent("remote.git"))
+        let services = makeServices(cloneDir: cloneDir, baseDir: baseDir, pullRequestAdapter: mockPR)
+        try await services.syncService.add(testFolder)
+
+        try services.noteService.createNote(in: testFolder, at: .root, name: "closed-pr")
+        try await services.syncService.commit(in: testFolder, message: "will have closed PR")
+        try await services.syncService.push(testFolder)
+
+        let branchName = try await services.syncService.status(for: testFolder).branch.name
+
+        // First attempt: merge fails (conflict) — PR #1 is created but left open
+        mockPR.shouldFailMerge = true
+        do { try await services.syncService.merge(testFolder) } catch {}
+
+        // Simulate PR #1 being closed on GitHub (not merged).
+        // In our mock, marking it in mergedBranches makes listPullRequests return [].
+        mockPR.mergedBranches.insert(branchName)
+        mockPR.shouldFailMerge = false
+
+        // Retry merge — no open PR found, creates PR #2, merges successfully
+        try await services.syncService.merge(testFolder)
+
+        let status = try await services.syncService.status(for: testFolder)
+        #expect(status.state == .upToDate)
+        #expect(status.branch.name == "main")
     }
 
     @Test func statusReadyToMergeAfterPush() async throws {
@@ -362,7 +493,7 @@ struct FolderSyncServiceTests {
 
         let status = try await services.syncService.status(for: testFolder)
         #expect(status.state == .readyToMerge)
-        #expect(!status.branch.isMain)
+        #expect(status.branch.name != "main")
     }
 
     @Test func multipleCommitsOnBranchBeforePush() async throws {
@@ -428,7 +559,7 @@ struct FolderSyncServiceTests {
 
         // Verify we're on a branch with pushNeeded
         let statusAfterCommit = try await services.syncService.status(for: testFolder)
-        #expect(!statusAfterCommit.branch.isMain)
+        #expect(statusAfterCommit.branch.name != "main")
         #expect(statusAfterCommit.state == .pushNeeded)
 
         // Discard all changes — reverts working tree but commit still exists
@@ -456,14 +587,14 @@ struct FolderSyncServiceTests {
         try GitTestHelper.run(["checkout", "-b", "noteblob/empty-branch"], at: cloneDir)
 
         let statusBefore = try await services.syncService.status(for: testFolder)
-        #expect(!statusBefore.branch.isMain)
+        #expect(statusBefore.branch.name != "main")
 
         // Push should not crash — it should detect 0 commits ahead and clean up
         try await services.syncService.push(testFolder)
 
         // Should be back on main after cleanup
         let statusAfter = try await services.syncService.status(for: testFolder)
-        #expect(statusAfter.branch.isMain)
+        #expect(statusAfter.branch.name == "main")
         #expect(statusAfter.state == .upToDate)
     }
 
@@ -497,7 +628,7 @@ struct FolderSyncServiceTests {
         try services.noteService.createNote(in: testFolder, at: .root, name: "second")
         try await services.syncService.commit(in: testFolder, message: "second session")
         let statusB = try await services.syncService.status(for: testFolder)
-        #expect(!statusB.branch.isMain)
+        #expect(statusB.branch.name != "main")
 
         // Push should succeed — only pushes branch B, not the stale refspec for branch A
         try await services.syncService.push(testFolder)
@@ -620,13 +751,13 @@ struct FolderSyncServiceTests {
 
     @Test func branchInfoDetectsMain() {
         let main = BranchInfo(name: "main")
-        #expect(main.isMain)
+        #expect(main.name == "main")
 
         let master = BranchInfo(name: "master")
-        #expect(master.isMain)
+        #expect(master.name == "master")
 
         let feature = BranchInfo(name: "noteblob/20260319-120000")
-        #expect(!feature.isMain)
+        #expect(feature.name != "main")
     }
 }
 
@@ -644,7 +775,7 @@ private struct StaticCredentialsProvider: CredentialsProvider {
     let token: String
 
     func loadCredentials() throws -> Credentials? {
-        Credentials(token: token)
+        Credentials(token: token, login: "test-user")
     }
 }
 
@@ -665,8 +796,10 @@ private final class MockPullRequestAdapter: PullRequestAdapter, @unchecked Senda
     private let bareRepoPath: URL
     private var nextPRNumber = 1
     private var createdPRs: [String: PullRequest] = [:]
-    private var mergedBranches: Set<String> = []
+    var mergedBranches: Set<String> = []
     var shouldFailMerge = false
+    var shouldFailCreateNoDiff = false
+    var deletedBranches: [String] = []
 
     init(bareRepoPath: URL) {
         self.bareRepoPath = bareRepoPath
@@ -681,15 +814,22 @@ private final class MockPullRequestAdapter: PullRequestAdapter, @unchecked Senda
     }
 
     func createPullRequest(_ request: CreatePullRequestRequest) async throws -> PullRequest {
+        if shouldFailCreateNoDiff {
+            throw GitClientError.noDiff
+        }
         let pr = PullRequest(number: nextPRNumber, htmlURL: "https://github.com/\(request.owner)/\(request.repo)/pull/\(nextPRNumber)")
         nextPRNumber += 1
         createdPRs[request.head] = pr
         return pr
     }
 
+    func deleteRemoteBranch(_ request: DeleteBranchRequest) async throws {
+        deletedBranches.append(request.branch)
+    }
+
     func mergePullRequest(_ request: MergePullRequestRequest) async throws {
         if shouldFailMerge {
-            throw GitClientError.apiError(statusCode: 405, message: "Merge conflict")
+            throw GitClientError.conflict
         }
 
         // Find which branch this PR is for
@@ -701,6 +841,23 @@ private final class MockPullRequestAdapter: PullRequestAdapter, @unchecked Senda
         // We need a working tree to do this, so we use git CLI on a temp clone of the bare repo.
         let tmpDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("mock-merge-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tmpDir) }
+
+        let workDir = tmpDir.appendingPathComponent("work")
+        try GitTestHelper.clone(remote: bareRepoPath.path, to: workDir, in: tmpDir)
+        try GitTestHelper.run(["fetch", "origin", branch], at: workDir)
+        try GitTestHelper.run(["merge", "--ff-only", "origin/\(branch)"], at: workDir)
+        try GitTestHelper.run(["push", "origin", "main"], at: workDir)
+
+        mergedBranches.insert(branch)
+    }
+
+    /// Simulate a GitHub-side merge (fast-forward main in the bare repo) without going
+    /// through `mergePullRequest`. Useful for testing the "already merged on web" scenario.
+    func simulateRemoteMerge(branch: String) throws {
+        let tmpDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mock-remote-merge-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tmpDir) }
 

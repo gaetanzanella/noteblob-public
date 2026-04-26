@@ -4,6 +4,8 @@ import Synchronization
 public enum SyncEvent: Sendable {
     case didPull(Folder)
     case didMerge(Folder)
+    case didDiscard(Folder)
+    case didDelete(Folder)
 }
 
 public final class SyncEventPublisher: Sendable {

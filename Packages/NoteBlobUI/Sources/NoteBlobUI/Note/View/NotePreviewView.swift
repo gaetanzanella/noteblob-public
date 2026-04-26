@@ -4,8 +4,9 @@ struct NotePreviewView: View {
 
     let content: String
     let mode: PreviewMode
+    let onOpenNoteLink: ((URL) -> Void)?
 
     var body: some View {
-        MarkdownRendererView(source: content, mode: mode)
+        MarkdownRendererView(source: content, mode: mode, onOpenNoteLink: onOpenNoteLink)
     }
 }

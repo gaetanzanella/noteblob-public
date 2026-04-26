@@ -1,5 +1,5 @@
-import SwiftUI
 import StoreKit
+import SwiftUI
 
 public struct NoteView: View {
 
@@ -7,23 +7,30 @@ public struct NoteView: View {
     @State var syncPresenter: SyncPresenter
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.requestReview) private var requestReview
+    @FocusState private var isPreviewFocused: Bool
 
     private let isFullScreen: Bool
     private let onToggleFullScreen: (() -> Void)?
     private let onSearchAppearanceChange: (Bool) -> Void
+    private let hasStackedNotes: Bool
+    private let onGoBack: (() -> Void)?
 
     public init(
-        presenter: NotePresenter? = nil,
+        presenter: NotePresenter?,
         syncPresenter: SyncPresenter,
-        isFullScreen: Bool = false,
-        onToggleFullScreen: (() -> Void)? = nil,
-        onSearchAppearanceChange: @escaping (Bool) -> Void
+        isFullScreen: Bool,
+        onToggleFullScreen: (() -> Void)?,
+        onSearchAppearanceChange: @escaping (Bool) -> Void,
+        hasStackedNotes: Bool,
+        onGoBack: (() -> Void)?
     ) {
         self._presenter = State(initialValue: presenter)
         self._syncPresenter = State(initialValue: syncPresenter)
         self.isFullScreen = isFullScreen
         self.onToggleFullScreen = onToggleFullScreen
         self.onSearchAppearanceChange = onSearchAppearanceChange
+        self.hasStackedNotes = hasStackedNotes
+        self.onGoBack = onGoBack
     }
 
     public var body: some View {
@@ -47,13 +54,28 @@ public struct NoteView: View {
                 NoteEditorView(
                     editor: editor,
                     toolbarActions: vm.toolbarActions,
-                    actionVersion: presenter.actionVersion
+                    undoRedoActions: vm.undoRedoActions,
+                    menuActions: vm.menuActions,
+                    actionVersion: presenter.actionVersion,
+                    onOpenNoteLink: { presenter.on(.openNoteLink($0)) }
                 )
                 #if os(iOS)
                     .scrollDismissesKeyboard(.interactively)
                 #endif
             case .preview(let content):
-                NotePreviewView(content: content, mode: vm.mode.previewMode)
+                NotePreviewView(
+                    content: content,
+                    mode: vm.mode.previewMode,
+                    onOpenNoteLink: { presenter.on(.openNoteLink($0)) }
+                )
+                    .focusable()
+                    .focusEffectDisabled()
+                    .focused($isPreviewFocused)
+                    .onKeyPress("e") {
+                        presenter.on(.edit)
+                        return .handled
+                    }
+                    .onAppear { isPreviewFocused = true }
             }
         }
         #if os(macOS)
@@ -68,6 +90,9 @@ public struct NoteView: View {
             .navigationSubtitle(vm.formattedDate)
         #endif
         .toolbar { toolbarContent(vm: vm, presenter: presenter) }
+        #if os(iOS)
+            .toolbarBackground(.hidden, for: .bottomBar)
+        #endif
         .onAppear { presenter.on(.load) }
         .onChange(of: presenter.shouldRequestReview) { _, shouldRequest in
             if shouldRequest { requestReview() }
@@ -80,10 +105,13 @@ public struct NoteView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        ContentUnavailableView(
-            "note.select.title",
-            systemImage: "doc.text"
-        )
+        ContentUnavailableView {
+            Label {
+                Text("note.select.title", bundle: .module)
+            } icon: {
+                Image(systemName: "doc.text")
+            }
+        }
         #if os(macOS)
             .toolbar {
                 // Reserves space in the detail toolbar so that the content column's
@@ -96,8 +124,7 @@ public struct NoteView: View {
     // MARK: - Toolbar
 
     @ToolbarContentBuilder
-    private func toolbarContent(vm: NoteViewModel, presenter: NotePresenter) -> some ToolbarContent
-    {
+    private func toolbarContent(vm: NoteViewModel, presenter: NotePresenter) -> some ToolbarContent {
         switch vm.mode {
         case .editing:
             editingToolbar(vm: vm, presenter: presenter)
@@ -107,8 +134,7 @@ public struct NoteView: View {
     }
 
     @ToolbarContentBuilder
-    private func editingToolbar(vm: NoteViewModel, presenter: NotePresenter) -> some ToolbarContent
-    {
+    private func editingToolbar(vm: NoteViewModel, presenter: NotePresenter) -> some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button {
                 presenter.on(.cancel)
@@ -127,13 +153,13 @@ public struct NoteView: View {
             .buttonBorderShape(.capsule)
         }
         #if os(iOS)
-            if !vm.menuActions.isEmpty {
-                ToolbarItem(placement: .bottomBar) {
-                    editorMenu(actions: vm.menuActions)
-                }
-                ToolbarSpacer(placement: .bottomBar)
-            }
+            // iOS editing mode: undo/redo, format actions, and the "more"
+            // menu all live in the keyboard accessory bar (InputAccessoryBar).
         #else
+            ToolbarItem(placement: .secondaryAction) {
+                MacOSToolbarActions(actions: vm.undoRedoActions)
+            }
+            ToolbarSpacer(.fixed, placement: .secondaryAction)
             ToolbarItem(placement: .secondaryAction) {
                 MacOSToolbarActions(actions: vm.toolbarActions)
             }
@@ -146,8 +172,7 @@ public struct NoteView: View {
     }
 
     @ToolbarContentBuilder
-    private func previewToolbar(vm: NoteViewModel, presenter: NotePresenter) -> some ToolbarContent
-    {
+    private func previewToolbar(vm: NoteViewModel, presenter: NotePresenter) -> some ToolbarContent {
         #if os(iOS)
             if horizontalSizeClass == .regular, let onToggleFullScreen {
                 ToolbarItem(placement: .topBarLeading) {
@@ -158,6 +183,17 @@ public struct NoteView: View {
                             systemName: isFullScreen
                                 ? "arrow.down.right.and.arrow.up.left"
                                 : "arrow.up.left.and.arrow.down.right")
+                    }
+                }
+            }
+            if hasStackedNotes, let onGoBack {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(action: onGoBack) {
+                        Label {
+                            Text("common.back", bundle: .module)
+                        } icon: {
+                            Image(systemName: "arrow.uturn.backward")
+                        }
                     }
                 }
             }
@@ -178,6 +214,18 @@ public struct NoteView: View {
                 noteMenu(vm: vm)
             }
         #else
+            if hasStackedNotes, let onGoBack {
+                ToolbarItem(placement: .automatic) {
+                    Button(action: onGoBack) {
+                        Label {
+                            Text("common.back", bundle: .module)
+                        } icon: {
+                            Image(systemName: "arrow.uturn.backward")
+                        }
+                    }
+                    .keyboardShortcut("[", modifiers: .command)
+                }
+            }
             ToolbarItem(placement: .automatic) {
                 Button {
                     presenter.on(.edit)
@@ -197,7 +245,9 @@ public struct NoteView: View {
         Menu {
             ForEach(actions) { action in
                 if case .button(let systemImage) = action.kind {
-                    Button { action.action() } label: {
+                    Button {
+                        action.action()
+                    } label: {
                         Label {
                             Text(LocalizedStringKey(action.localizedTitle), bundle: .module)
                         } icon: {
@@ -208,6 +258,29 @@ public struct NoteView: View {
             }
         } label: {
             Image(systemName: "ellipsis.circle")
+        }
+    }
+
+    // MARK: - Undo/Redo Menu
+
+    private func undoRedoMenu(actions: [ToolbarAction]) -> some View {
+        Menu {
+            ForEach(actions) { action in
+                if case .button(let systemImage) = action.kind {
+                    Button {
+                        action.action()
+                    } label: {
+                        Label {
+                            Text(LocalizedStringKey(action.localizedTitle), bundle: .module)
+                        } icon: {
+                            Image(systemName: systemImage)
+                        }
+                    }
+                    .disabled(!action.isEnabled)
+                }
+            }
+        } label: {
+            Image(systemName: "arrow.uturn.backward")
         }
     }
 

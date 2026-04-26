@@ -50,4 +50,11 @@ extension Range where Bound == Int {
     func shifted(by delta: Int) -> Range<Int> {
         (lowerBound + delta)..<(upperBound + delta)
     }
+
+    /// Shift the range by `delta`, clamping each bound to at least `floor`.
+    /// Use when the shift can go negative (e.g. deleting a prefix) and the
+    /// resulting selection must not cross the start of the edited region.
+    func shifted(by delta: Int, floor: Int) -> Range<Int> {
+        Swift.max(floor, lowerBound + delta)..<Swift.max(floor, upperBound + delta)
+    }
 }

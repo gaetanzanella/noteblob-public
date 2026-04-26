@@ -13,6 +13,7 @@ public enum AccountRedirection {
 
 struct AccountViewModel {
     var isAuthenticated: Bool
+    var login: String?
     var isMCPServerEnabled: Bool
     var mcpServerStatus: MCPServerStatus
 }
@@ -65,6 +66,7 @@ public final class AccountPresenter {
     func viewModel() -> AccountViewModel {
         AccountViewModel(
             isAuthenticated: authService.isAuthenticated,
+            login: authService.login,
             isMCPServerEnabled: state.isMCPServerEnabled,
             mcpServerStatus: state.mcpServerStatus
         )

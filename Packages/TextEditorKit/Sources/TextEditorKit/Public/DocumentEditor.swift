@@ -35,13 +35,22 @@ public final class DocumentEditor {
 
     public init() {
         let autoSave = AutoSaveObserver()
+        let undoObserver = UndoObserver()
         self.interceptors = [
             ListContinuationInterceptor(),
             ListIndentInterceptor(),
+            URLLinkInterceptor(),
+            BracketWrapInterceptor(opening: "(", closing: ")"),
+            BracketWrapInterceptor(opening: "[", closing: "]"),
+            BracketWrapInterceptor(opening: "{", closing: "}"),
+            BracketWrapInterceptor(opening: "\"", closing: "\""),
+            BracketWrapInterceptor(opening: "`", closing: "`"),
         ]
-        self.lifecycleInterceptors = [autoSave]
-        self.actionHandlerFactory = DefaultActionHandlerFactory()
+        self.lifecycleInterceptors = [undoObserver, autoSave]
+        let factory = DefaultActionHandlerFactory(undoObserver: undoObserver)
+        self.actionHandlerFactory = factory
         self.documentLayout = MarkdownDocumentLayout()
+        factory.editor = self
     }
 
     // MARK: - Init (Internal, for testing)
@@ -64,37 +73,26 @@ public final class DocumentEditor {
         state = .loaded(url: url, originalText: content)
         documentLayout.setText(content)
         textInput?.setText(content)
+        runLifecycleInterceptors(event: .didLoad)
     }
 
     func loadText(_ text: String) {
         state = .loaded(url: nil, originalText: text)
         documentLayout.setText(text)
         textInput?.setText(text)
+        runLifecycleInterceptors(event: .didLoad)
     }
 
     public func save() {
-        guard let context = makeEditorContext() else { return }
-        runLifecycleInterceptors(LifecycleContext(event: .didSave, editorContext: context))
+        runLifecycleInterceptors(event: .didSave)
     }
 
     public func cancelEditing() {
         guard case .loaded(_, let originalText) = state else { return }
         guard let textInput else { return }
-        let previousText = textInput.text()
         textInput.setText(originalText)
         documentLayout.setText(originalText)
-
-        if let editorContext = makeEditorContext() {
-            let typeContext = TypeContext(
-                previousText: previousText,
-                newText: originalText,
-                changedRange: 0..<previousText.utf16.count,
-                replacementString: originalText,
-                editorContext: editorContext
-            )
-            runInterceptors(typeContext)
-            runLifecycleInterceptors(LifecycleContext(event: .didCancelEditing, editorContext: editorContext))
-        }
+        runLifecycleInterceptors(event: .didCancelEditing)
         delegate?.documentEditorDidUpdateActions(self)
     }
 
@@ -108,6 +106,7 @@ public final class DocumentEditor {
 
         if case .loaded(_, let originalText) = state {
             textInput.setText(originalText)
+            runLifecycleInterceptors(event: .didLoad)
         }
     }
 
@@ -118,13 +117,15 @@ public final class DocumentEditor {
         guard let context = makeEditorContext() else { return }
 
         let handler = actionHandlerFactory.makeHandler(for: action)
-        let edit = handler.isActive(in: context)
+        let edit =
+            handler.isActive(in: context)
             ? handler.deactivate(in: context)
             : handler.activate(in: context)
 
-        if let edit {
-            applyEdit(edit)
-        }
+        guard let edit else { return }
+        applyEdit(edit)
+        runLifecycleInterceptors(event: .didChangeText)
+        delegate?.documentEditorDidUpdateActions(self)
     }
 
     public func isActive(_ action: DocumentEditorAction) -> Bool {
@@ -132,6 +133,27 @@ public final class DocumentEditor {
         return actionHandlerFactory.makeHandler(for: action).isActive(in: context)
     }
 
+    /// Disabling matrix — which actions are enabled for which block-level token
+    /// at the selection. Columns are the `MarkdownLineToken` case at every line
+    /// touched by the selection. `✓` enabled, `✗` disabled.
+    ///
+    /// Most formatting actions also require the selection to stay on a single
+    /// line: inline marks can't span a paragraph break in markdown, and
+    /// heading/codeBlock only operate on the cursor's current line. The list
+    /// actions (`list`, `todoList`) are the exception — they iterate each
+    /// selected line, adding the prefix to any line that isn't already a
+    /// matching list item (and stripping the prefix when toggling off).
+    ///
+    /// | Action                  | paragraph | heading | codeBlock | listItem | blockQuote | thematicBreak | table | htmlBlock |
+    /// |-------------------------|-----------|---------|-----------|----------|------------|---------------|-------|-----------|
+    /// | bold / italic / strike  | ✓         | ✓       | ✗         | ✓        | ✓          | ✗             | ✗     | ✗         |
+    /// | inlineCode              | ✓         | ✓       | ✗         | ✓        | ✓          | ✗             | ✗     | ✗         |
+    /// | heading(n)              | ✓         | ✓       | ✗         | ✗        | ✗          | ✗             | ✗     | ✗         |
+    /// | codeBlock               | ✓         | ✗       | ✓         | ✗        | ✗          | ✗             | ✗     | ✗         |
+    /// | list / todoList         | ✓         | ✗       | ✗         | ✓        | ✓          | ✗             | ✗     | ✗         |
+    /// | indent / dedent         | gated to list items only (dedent also requires depth > 0)                                     |
+    /// | formatDocument          | ✓ everywhere                                                                                  |
+    /// | undo / redo             | depends only on `undoObserver.canUndo` / `canRedo`                                            |
     public func isEnabled(_ action: DocumentEditorAction) -> Bool {
         guard isVisible(action) else { return false }
         guard let context = makeEditorContext() else { return false }
@@ -176,84 +198,97 @@ public final class DocumentEditor {
                 replacementString: change.replacementString,
                 editorContext: editorContext
             )
-            runInterceptors(typeContext)
-            runLifecycleInterceptors(LifecycleContext(event: .didChangeText, editorContext: editorContext))
+            for interceptor in interceptors.sorted(by: { $0.priority < $1.priority }) {
+                if let edit = interceptor.intercept(typeContext) {
+                    applyEdit(edit)
+                    break
+                }
+            }
         }
+        runLifecycleInterceptors(event: .didChangeText)
         delegate?.documentEditorDidUpdateActions(self)
     }
 
     func didChangeSelection() {
+        runLifecycleInterceptors(event: .didChangeSelection)
         delegate?.documentEditorDidUpdateActions(self)
     }
 
     // MARK: - Private
 
-    private func runLifecycleInterceptors(_ context: LifecycleContext) {
+    private func runLifecycleInterceptors(event: LifecycleContext.Event) {
+        guard let context = makeEditorContext() else { return }
+        let lifecycleContext = LifecycleContext(
+            event: event,
+            editorContext: context
+        )
         for interceptor in lifecycleInterceptors {
-            interceptor.intercept(context)
+            interceptor.intercept(lifecycleContext)
         }
-    }
-
-    private var currentURL: URL? {
-        if case .loaded(let url, _) = state { return url }
-        return nil
     }
 
     private func makeEditorContext() -> EditorContext? {
         guard let textInput else { return nil }
         let nsRange = textInput.selectedRange()
+        let url: URL? = if case .loaded(let url, _) = state { url } else { nil }
         return EditorContext(
             selectionUTF16: nsRange.location..<(nsRange.location + nsRange.length),
             text: textInput.text(),
             documentLayout: documentLayout,
-            documentURL: currentURL
+            documentURL: url
         )
-    }
-
-    private func runInterceptors(_ context: TypeContext) {
-        let sorted = interceptors.sorted { $0.priority < $1.priority }
-        for interceptor in sorted {
-            if let edit = interceptor.intercept(context) {
-                applyEdit(edit)
-                return
-            }
-        }
     }
 
     private func applyEdit(_ edit: TextEdit) {
         guard let textInput else { return }
 
         for change in edit.changes.sortedDescending() {
-            let nsRange: NSRange
+            let range: Range<Int>
             let replacement: String
 
             switch change {
             case .insert(let at, let string):
-                nsRange = NSRange(location: at, length: 0)
+                range = at..<at
                 replacement = string
-            case .replace(let range, let with):
-                nsRange = NSRange(location: range.lowerBound, length: range.count)
+            case .replace(let r, let with):
+                range = r
                 replacement = with
-            case .delete(let range):
-                nsRange = NSRange(location: range.lowerBound, length: range.count)
+            case .delete(let r):
+                range = r
                 replacement = ""
             }
 
-            textInput.replaceCharacters(in: nsRange, with: replacement)
+            if textInput.text().isEmpty {
+                textInput.setText(replacement)
+            } else {
+                textInput.replaceCharacters(
+                    in: NSRange(location: range.lowerBound, length: range.count),
+                    with: replacement
+                )
+            }
+            documentLayout.update(
+                newText: textInput.text(),
+                changedRange: range,
+                replacementLength: replacement.utf16.count
+            )
         }
 
-        textInput.setSelectedRange(NSRange(location: edit.selection.lowerBound, length: edit.selection.count))
-        documentLayout.setText(textInput.text())
-        if let context = makeEditorContext() {
-            runLifecycleInterceptors(LifecycleContext(event: .didChangeText, editorContext: context))
-        }
-        delegate?.documentEditorDidUpdateActions(self)
+        textInput.setSelectedRange(
+            NSRange(location: edit.selection.lowerBound, length: edit.selection.count))
     }
 }
 
 // MARK: - DefaultActionHandlerFactory
 
-struct DefaultActionHandlerFactory: ActionHandlerFactory {
+@MainActor
+final class DefaultActionHandlerFactory: ActionHandlerFactory {
+
+    let undoObserver: UndoObserver
+    weak var editor: DocumentEditor?
+
+    init(undoObserver: UndoObserver) {
+        self.undoObserver = undoObserver
+    }
 
     func makeHandler(for action: DocumentEditorAction) -> DocumentEditorActionHandler {
         switch action {
@@ -276,6 +311,22 @@ struct DefaultActionHandlerFactory: ActionHandlerFactory {
             return IndentActionHandler(direction: .dedent)
         case .formatDocument:
             return FormatActionHandler()
+        case .insert(let insertion):
+            switch insertion {
+            case .link(let target, let title):
+                return LinkActionHandler(target: target, fallbackTitle: title)
+            case .table(let table):
+                return TableActionHandler(table: table)
+            }
+        case .editTable:
+            return EditTableActionHandler(onRequest: { [weak editor] request in
+                guard let editor else { return }
+                editor.delegate?.documentEditor(editor, requestTableEditing: request)
+            })
+        case .undo:
+            return UndoActionHandler(undoObserver: undoObserver)
+        case .redo:
+            return RedoActionHandler(undoObserver: undoObserver)
         }
     }
 }

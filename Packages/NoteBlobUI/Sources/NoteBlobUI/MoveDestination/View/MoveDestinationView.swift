@@ -5,6 +5,16 @@ struct MoveDestinationView: View {
 
     @State var presenter: MoveDestinationPresenter
 
+    private var folderBinding: Binding<String> {
+        Binding(
+            get: { presenter.viewModel().folders.first(where: { $0.isSelected })?.id ?? "" },
+            set: { id in
+                guard let folder = presenter.viewModel().folders.first(where: { $0.id == id })?.folder else { return }
+                presenter.on(.selectFolder(folder))
+            }
+        )
+    }
+
     private var selection: Binding<RelativePath?> {
         Binding(
             get: { presenter.viewModel().selectedPath },
@@ -19,13 +29,36 @@ struct MoveDestinationView: View {
     var body: some View {
         let vm = presenter.viewModel()
         List(selection: selection) {
-            rootRow(vm: vm)
-            OutlineGroup(vm.rows, children: \.children) { row in
-                folderRow(row: row, vm: vm)
+            if vm.folders.count > 1 {
+                Section {
+                    Picker(selection: folderBinding) {
+                        ForEach(vm.folders) { choice in
+                            Text(choice.name).tag(choice.id)
+                        }
+                    } label: {
+                        Label {
+                            Text("folder.move.destination_label", bundle: .module)
+                        } icon: {
+                            Image(systemName: "shippingbox")
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+            }
+
+            Section {
+                rootRow(vm: vm)
+                OutlineGroup(vm.rows, children: \.children) { row in
+                    folderRow(row: row, vm: vm)
+                }
             }
         }
-        .listStyle(.plain)
-        .navigationTitle(vm.title)
+        #if os(iOS)
+        .listStyle(.insetGrouped)
+        #else
+        .listStyle(.inset)
+        #endif
+        .navigationTitle(vm.sourceFolderName)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -56,9 +89,13 @@ struct MoveDestinationView: View {
     }
 
     private func rootRow(vm: MoveDestinationViewModel) -> some View {
-        Label(vm.title, systemImage: "folder")
-            .tag(RelativePath.root)
-            .disabled(vm.isRootDisabled)
+        Label {
+            Text(verbatim: ".")
+        } icon: {
+            Image(systemName: "folder")
+        }
+        .tag(RelativePath.root)
+        .disabled(vm.isRootDisabled)
     }
 
     private func folderRow(row: MoveDestinationViewModel.Row, vm: MoveDestinationViewModel) -> some View {
@@ -91,7 +128,7 @@ public struct MoveDestinationSheet: View {
             }
         }
         #if os(macOS)
-        .frame(minHeight: 400)
+        .frame(minWidth: 420, idealWidth: 460, minHeight: 420, idealHeight: 500, maxHeight: 700)
         #endif
     }
 }

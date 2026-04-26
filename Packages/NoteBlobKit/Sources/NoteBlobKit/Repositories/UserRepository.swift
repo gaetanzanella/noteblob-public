@@ -5,5 +5,4 @@ protocol UserRepository: Sendable {
     func saveCredentials(_ credentials: Credentials) throws
     func loadCredentials() throws -> Credentials?
     func deleteCredentials() throws
-    func searchRepositories(query: String, credentials: Credentials) async throws -> [Repository]
 }

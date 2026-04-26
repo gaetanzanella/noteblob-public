@@ -23,7 +23,7 @@ public struct FolderListView: View {
                     Label {
                         Text("folder_list.empty.title", bundle: .module)
                     } icon: {
-                        Image(systemName: "folder.badge.plus")
+                        Image(systemName: "shippingbox")
                     }
                 } description: {
                     Text("folder_list.empty.description", bundle: .module)
@@ -31,7 +31,7 @@ public struct FolderListView: View {
                 .listRowBackground(Color.clear)
             } else {
                 ForEach(vm.rows) { row in
-                    DisclosureRow(title: row.name, systemImage: "folder")
+                    DisclosureRow(title: row.name, systemImage: "shippingbox")
                         .contextMenu {
                             Button(role: .destructive) {
                                 presenter.on(.delete(row.id))
@@ -70,10 +70,13 @@ public struct FolderListView: View {
                 Button {
                     presenter.on(.addFolder)
                 } label: {
-                    Image(systemName: "folder.badge.plus")
+                    Image(systemName: "plus")
                 }
             }
         }
         .onAppear { presenter.on(.load) }
+        .alert(vm.alert) {
+            presenter.on(.dismissAlert)
+        }
     }
 }

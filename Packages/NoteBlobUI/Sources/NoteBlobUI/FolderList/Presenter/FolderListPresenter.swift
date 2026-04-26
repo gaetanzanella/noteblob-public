@@ -7,6 +7,7 @@ public enum FolderListViewAction {
     case load
     case select(String?)
     case delete(String)
+    case dismissAlert
     case addFolder
     case account
 }
@@ -43,6 +44,7 @@ struct FolderListViewModel {
     let rows: [Row]
     let subtitle: String
     let errorMessage: String?
+    let alert: AlertViewModel?
 }
 
 // MARK: - State
@@ -50,6 +52,7 @@ struct FolderListViewModel {
 private struct FolderListState {
     var folders: [Folder] = []
     var errorMessage: String?
+    var alert: AlertViewModel?
 }
 
 // MARK: - Presenter
@@ -78,7 +81,8 @@ public final class FolderListPresenter {
         return FolderListViewModel(
             rows: state.folders.map { FolderListViewModel.Row(id: $0.id, name: $0.name) },
             subtitle: .localized("folder_list.subtitle \(count)"),
-            errorMessage: state.errorMessage
+            errorMessage: state.errorMessage,
+            alert: state.alert
         )
     }
 
@@ -94,7 +98,9 @@ public final class FolderListPresenter {
             }
         case .delete(let id):
             guard let folder = state.folders.first(where: { $0.id == id }) else { return }
-            remove(folder)
+            confirmDelete(folder)
+        case .dismissAlert:
+            state.alert = nil
         case .addFolder:
             onRedirection(.addFolder(AddFolderNavigationPayload(onFoldersChanged: { [weak self] in
                 self?.loadFolders()
@@ -114,6 +120,12 @@ public final class FolderListPresenter {
             }
         } catch {
             state.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func confirmDelete(_ folder: Folder) {
+        state.alert = Alerts.confirmDeleteFolder(name: folder.name) { [weak self] in
+            self?.remove(folder)
         }
     }
 

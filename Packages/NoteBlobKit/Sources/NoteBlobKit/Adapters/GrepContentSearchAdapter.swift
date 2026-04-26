@@ -104,25 +104,45 @@ struct GrepContentSearchAdapter: ContentSearchRepository {
                 matchRange.upperBound, offsetBy: contextLength / 2, limitedBy: content.endIndex)
             ?? content.endIndex
 
-        let rawSnippet = String(content[snippetStart..<snippetEnd])
-            .replacingOccurrences(of: "\n", with: " ")
-            .trimmingCharacters(in: .whitespaces)
-
         let prefix = snippetStart > content.startIndex ? "..." : ""
         let suffix = snippetEnd < content.endIndex ? "..." : ""
-        let text = prefix + rawSnippet + suffix
 
-        let matchStartInSnippet = text.index(
-            text.startIndex,
-            offsetBy: prefix.count + content.distance(from: snippetStart, to: matchRange.lowerBound)
-        )
-        let matchEndInSnippet = text.index(
-            matchStartInSnippet,
-            offsetBy: content.distance(from: matchRange.lowerBound, to: matchRange.upperBound))
+        // Build the snippet character by character, tracking where the match falls
+        var text = prefix
+        var matchStart: String.Index?
+        var matchEnd: String.Index?
+        var pastLeadingWhitespace = false
+
+        for idx in content[snippetStart..<snippetEnd].indices {
+            let ch = content[idx]
+            let replacement: Character = ch == "\n" ? " " : ch
+
+            // Skip leading whitespace
+            if !pastLeadingWhitespace {
+                if replacement.isWhitespace { continue }
+                pastLeadingWhitespace = true
+            }
+
+            if idx == matchRange.lowerBound { matchStart = text.endIndex }
+            if idx == matchRange.upperBound { matchEnd = text.endIndex }
+            text.append(replacement)
+        }
+        // Handle upperBound at snippetEnd
+        if matchEnd == nil, matchRange.upperBound <= snippetEnd {
+            matchEnd = text.endIndex
+        }
+
+        // Trim trailing whitespace, but not past the match end
+        let safeTrailBound = matchEnd ?? text.startIndex
+        while text.endIndex > safeTrailBound, text.last?.isWhitespace == true {
+            text.removeLast()
+        }
+
+        text += suffix
 
         return ContentSearchSnippet(
             text: text,
-            matchRange: matchStartInSnippet..<matchEndInSnippet
+            matchRange: (matchStart ?? text.endIndex)..<(matchEnd ?? text.endIndex)
         )
     }
 }

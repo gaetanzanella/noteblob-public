@@ -1,8 +1,7 @@
 import NoteBlobKit
-import NoteBlobUI
 import SwiftUI
 
-struct RootCoordinator: Scene {
+public struct RootCoordinator: Scene {
 
     let presenterFactory: PresenterFactory
     @State private var rootPresenter: RootPresenter
@@ -11,12 +10,12 @@ struct RootCoordinator: Scene {
     @State private var isShowingAccount = false
     #endif
 
-    init(presenterFactory: PresenterFactory) {
+    public init(presenterFactory: PresenterFactory) {
         self.presenterFactory = presenterFactory
         self._rootPresenter = State(initialValue: presenterFactory.makeRootPresenter())
     }
 
-    var body: some Scene {
+    public var body: some Scene {
         WindowGroup {
             MainCoordinator(
                 presenterFactory: presenterFactory,

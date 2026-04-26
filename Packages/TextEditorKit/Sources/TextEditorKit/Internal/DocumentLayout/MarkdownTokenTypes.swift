@@ -4,32 +4,32 @@ import Foundation
 
 /// Represents the block-level markdown element for a line.
 /// Provides a stable API that hides the swift-markdown implementation details.
-public enum MarkdownLineToken: Sendable, Equatable {
+enum MarkdownLineToken: Sendable, Equatable {
     case paragraph
     case heading(level: Int)
     case codeBlock(language: String?, isFenced: Bool)
     case blockQuote(depth: Int)
     case listItem(ListItemInfo)
     case thematicBreak
-    case table
+    case table(TableInfo)
     case htmlBlock
 
     /// Information about a list item
-    public struct ListItemInfo: Sendable, Equatable {
-        public let isOrdered: Bool
-        public let depth: Int
-        public let marker: String
-        public let checkbox: Checkbox?
-        public let number: Int?
+    struct ListItemInfo: Sendable, Equatable {
+        let isOrdered: Bool
+        let depth: Int
+        let marker: String
+        let checkbox: Checkbox?
+        let number: Int?
         /// UTF-16 length of the full prefix (indentation + marker + checkbox + space)
-        public let prefixLength: Int
+        let prefixLength: Int
 
-        public enum Checkbox: Sendable, Equatable {
+        enum Checkbox: Sendable, Equatable {
             case checked
             case unchecked
         }
 
-        public init(
+        init(
             isOrdered: Bool, depth: Int, marker: String, checkbox: Checkbox? = nil,
             number: Int? = nil, prefixLength: Int = 0
         ) {
@@ -42,7 +42,7 @@ public enum MarkdownLineToken: Sendable, Equatable {
         }
 
         /// Returns the prefix for continuing this list
-        public func continuationPrefix() -> String {
+        func continuationPrefix() -> String {
             var prefix = String(repeating: "  ", count: depth)
 
             if isOrdered {
@@ -57,6 +57,20 @@ public enum MarkdownLineToken: Sendable, Equatable {
             }
 
             return prefix
+        }
+    }
+
+    /// Information about a table block — the parsed cells plus the 0-based
+    /// line range the table occupies in the document.
+    struct TableInfo: Sendable, Equatable {
+        let headers: [String]
+        let rows: [[String]]
+        let lineRange: Range<Int>
+
+        init(headers: [String], rows: [[String]], lineRange: Range<Int>) {
+            self.headers = headers
+            self.rows = rows
+            self.lineRange = lineRange
         }
     }
 }

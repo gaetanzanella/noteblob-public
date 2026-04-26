@@ -39,6 +39,10 @@ final class GitHubPullRequestAdapter: PullRequestAdapter, @unchecked Sendable {
         )
 
         let (data, response) = try await session.data(for: urlRequest)
+        // 422: no commits between branches (already merged)
+        if let http = response as? HTTPURLResponse, http.statusCode == 422 {
+            throw GitClientError.noDiff
+        }
         try checkResponse(response, data: data)
 
         let pr = try JSONDecoder().decode(GitHubPR.self, from: data)
@@ -58,6 +62,24 @@ final class GitHubPullRequestAdapter: PullRequestAdapter, @unchecked Sendable {
         )
 
         let (data, response) = try await session.data(for: urlRequest)
+        try checkMergeResponse(response, data: data)
+    }
+
+    // MARK: - Delete Branch
+
+    func deleteRemoteBranch(_ request: DeleteBranchRequest) async throws {
+        let ref = request.branch.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? request.branch
+        let url = URL(string: "https://api.github.com/repos/\(request.owner)/\(request.repo)/git/refs/heads/\(ref)")!
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "DELETE"
+        applyHeaders(&urlRequest, token: request.credentials.token)
+
+        let (data, response) = try await session.data(for: urlRequest)
+        // 204 No Content is the expected success response; 422 means already deleted
+        if let http = response as? HTTPURLResponse, http.statusCode == 422 {
+            return
+        }
         try checkResponse(response, data: data)
     }
 
@@ -75,6 +97,21 @@ final class GitHubPullRequestAdapter: PullRequestAdapter, @unchecked Sendable {
         }
         guard (200...299).contains(http.statusCode) else {
             let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw GitClientError.apiError(statusCode: http.statusCode, message: message)
+        }
+    }
+
+    private func checkMergeResponse(_ response: URLResponse, data: Data) throws {
+        guard let http = response as? HTTPURLResponse else {
+            throw GitClientError.apiError(statusCode: 0, message: "Invalid response")
+        }
+        guard (200...299).contains(http.statusCode) else {
+            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            // 405: merge not allowed (e.g. branch protection)
+            // 409: conflict — the merge cannot be performed
+            if http.statusCode == 405 || http.statusCode == 409 {
+                throw GitClientError.conflict
+            }
             throw GitClientError.apiError(statusCode: http.statusCode, message: message)
         }
     }

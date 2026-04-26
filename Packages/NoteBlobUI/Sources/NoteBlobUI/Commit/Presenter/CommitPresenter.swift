@@ -18,6 +18,7 @@ public enum CommitViewAction {
     case pull
     case merge
     case signIn
+    case selectStep(SyncFlowStep)
 }
 
 public enum CommitRedirection {
@@ -60,23 +61,54 @@ struct CommitViewModel {
         let isPushed: Bool
     }
 
+    enum DotState {
+        case selected
+        case reached
+        case notReached
+    }
+
+    struct StepViewModel: Identifiable {
+        var id: SyncFlowStep { step }
+        let step: SyncFlowStep
+        let dotState: DotState
+        let isCurrent: Bool
+        let explanation: String
+    }
+
     let mode: Mode
+    let navigationTitle: String
+    let isSelectionEnabled: Bool
     let commitMessage: String
     let rows: [Row]
     let branchName: String
     let commitRows: [CommitRow]
     let isLoading: Bool
     let isGeneratingMessage: Bool
-    let errorMessage: String?
+    let errorMessage: AttributedString?
     let needsAuth: Bool
+    let steps: [StepViewModel]
+    let selectedStep: SyncFlowStep?
+    var isBrowsingOtherStep: Bool {
+        guard let selectedStep, let currentStep = syncFlowStep else { return false }
+        return selectedStep != currentStep
+    }
     var canCommit: Bool {
         !commitMessage.trimmingCharacters(in: .whitespaces).isEmpty && !isLoading && !isGeneratingMessage
+    }
+
+    private var syncFlowStep: SyncFlowStep? {
+        switch mode {
+        case .localChanges: .commit
+        case .pushNeeded: .push
+        case .readyToMerge: .merge
+        case .loading, .pullNeeded, .upToDate, .notBacked: nil
+        }
     }
 }
 
 // MARK: - State
 
-private struct CommitState {
+struct CommitState {
     let payload: CommitNavigationPayload
     var syncStatus: SyncStatus?
     var commitMessage = ""
@@ -85,8 +117,9 @@ private struct CommitState {
     var unpushedCount = 0
     var isLoading = false
     var isGeneratingMessage = false
-    var errorMessage: String?
+    var errorMessage: AttributedString?
     var needsAuth = false
+    var selectedStep: SyncFlowStep?
 }
 
 // MARK: - Presenter
@@ -98,6 +131,7 @@ public final class CommitPresenter {
     private var state: CommitState
     private let folderSyncService: FolderSyncService
     private let aiAssistantService: AIAssistantService
+    private let mapper = CommitViewModelMapper()
     private let onRedirection: (CommitRedirection) -> Void
 
     public init(
@@ -113,30 +147,7 @@ public final class CommitPresenter {
     }
 
     func viewModel() -> CommitViewModel {
-        CommitViewModel(
-            mode: mapMode(state.syncStatus),
-            commitMessage: state.commitMessage,
-            rows: state.changes.map { change in
-                CommitViewModel.Row(
-                    id: change.path,
-                    path: change.path,
-                    kind: mapChangeKind(change)
-                )
-            },
-            branchName: state.syncStatus?.branch.name ?? "",
-            commitRows: state.commitLog.enumerated().map { index, commit in
-                CommitViewModel.CommitRow(
-                    id: commit.id,
-                    message: commit.message,
-                    date: commit.date,
-                    isPushed: index >= state.unpushedCount
-                )
-            },
-            isLoading: state.isLoading,
-            isGeneratingMessage: state.isGeneratingMessage,
-            errorMessage: state.errorMessage,
-            needsAuth: state.needsAuth
-        )
+        mapper.map(state)
     }
 
     public func on(_ action: CommitViewAction) {
@@ -186,26 +197,8 @@ public final class CommitPresenter {
                     self?.on(.load)
                 }
             )))
-        }
-    }
-
-    private func mapMode(_ status: SyncStatus?) -> CommitViewModel.Mode {
-        guard let status else { return .loading }
-        return switch status.state {
-        case .upToDate: .upToDate
-        case .localChanges: .localChanges
-        case .pushNeeded: .pushNeeded
-        case .pullNeeded: .pullNeeded
-        case .readyToMerge: .readyToMerge
-        case .notBacked: .notBacked
-        }
-    }
-
-    private func mapChangeKind(_ change: Change) -> CommitViewModel.ChangeKind {
-        switch change {
-        case .added: .added
-        case .modified: .modified
-        case .deleted: .deleted
+        case .selectStep(let step):
+            state.selectedStep = step
         }
     }
 
@@ -287,111 +280,72 @@ public final class CommitPresenter {
 
     private func commit() async {
         guard !state.commitMessage.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        state.isLoading = true
-        state.errorMessage = nil
-        state.needsAuth = false
-        do {
+        await performAction {
             try await folderSyncService.commit(
                 in: state.payload.folder,
                 message: state.commitMessage
             )
-            state.isLoading = false
-            onRedirection(.dismiss)
-        } catch {
-            handleError(error)
-            state.isLoading = false
         }
     }
 
     private func commitAndPush() async {
         guard !state.commitMessage.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        state.isLoading = true
-        state.errorMessage = nil
-        state.needsAuth = false
-        do {
+        await performAction {
             try await folderSyncService.commitAndPush(
                 in: state.payload.folder,
                 message: state.commitMessage
             )
-            state.isLoading = false
-            onRedirection(.dismiss)
-        } catch {
-            handleError(error)
-            await load()
         }
     }
 
     private func commitPushAndMerge() async {
         guard !state.commitMessage.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        state.isLoading = true
-        state.errorMessage = nil
-        state.needsAuth = false
-        do {
+        await performAction {
             try await folderSyncService.commitPushAndMerge(
                 in: state.payload.folder,
                 message: state.commitMessage
             )
-            state.isLoading = false
-            onRedirection(.dismiss)
-        } catch {
-            handleError(error)
-            await load()
         }
     }
 
     private func push() async {
-        state.isLoading = true
-        state.errorMessage = nil
-        state.needsAuth = false
-        do {
+        await performAction {
             try await folderSyncService.push(state.payload.folder)
-            state.isLoading = false
-            onRedirection(.dismiss)
-        } catch {
-            handleError(error)
-            state.isLoading = false
         }
     }
 
     private func pushAndMerge() async {
-        state.isLoading = true
-        state.errorMessage = nil
-        state.needsAuth = false
-        do {
+        await performAction {
             try await folderSyncService.pushAndMerge(state.payload.folder)
-            state.isLoading = false
-            onRedirection(.dismiss)
-        } catch {
-            handleError(error)
-            await load()
         }
     }
 
     private func pull() async {
-        state.isLoading = true
-        state.errorMessage = nil
-        state.needsAuth = false
-        do {
+        await performAction {
             try await folderSyncService.pull(state.payload.folder)
-            state.isLoading = false
-            onRedirection(.dismiss)
-        } catch {
-            handleError(error)
-            state.isLoading = false
         }
     }
 
     private func merge() async {
+        await performAction {
+            try await folderSyncService.merge(state.payload.folder)
+        }
+    }
+
+    private func performAction(_ action: () async throws -> Void) async {
         state.isLoading = true
         state.errorMessage = nil
         state.needsAuth = false
         do {
-            try await folderSyncService.merge(state.payload.folder)
+            try await action()
             state.isLoading = false
             onRedirection(.dismiss)
         } catch {
-            handleError(error)
-            state.isLoading = false
+            let errorMessage = ErrorMapper.errorDescription(for: error)
+            let needsAuth = (error as? NoteBlobError).map { if case .notAuthenticated = $0 { true } else { false } } ?? false
+            await load()
+            state.errorMessage = errorMessage
+            state.needsAuth = needsAuth
         }
     }
 

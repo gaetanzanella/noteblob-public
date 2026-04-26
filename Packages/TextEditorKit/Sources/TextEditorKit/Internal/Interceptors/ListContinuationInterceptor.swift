@@ -52,7 +52,6 @@ struct ListContinuationInterceptor: TypeInterceptor {
 
     private func isEmptyListItem(lineRange: Range<Int>, info: MarkdownLineToken.ListItemInfo) -> Bool {
         let lineLength = lineRange.upperBound - lineRange.lowerBound
-        let fullPrefixLength = info.depth * 2 + info.prefixLength
-        return lineLength <= fullPrefixLength
+        return lineLength <= info.prefixLength
     }
 }

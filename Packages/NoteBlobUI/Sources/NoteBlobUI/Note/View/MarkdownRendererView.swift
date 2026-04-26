@@ -4,20 +4,29 @@ struct MarkdownRendererView: View {
 
     @Environment(\.horizontalContentMargin) private var horizontalMargin
 
-    private let source: String
-    private let mode: PreviewMode
-
-    init(source: String, mode: PreviewMode = .formatted) {
-        self.source = source
-        self.mode = mode
-    }
+    let source: String
+    let mode: PreviewMode
+    /// Called when the user activates an internal (scheme-less) link. The
+    /// URL's path component identifies the target note. External URLs are
+    /// left to the system to open.
+    let onOpenNoteLink: ((URL) -> Void)?
 
     public var body: some View {
         #if canImport(UIKit)
-            UIMarkdownRendererView(source: source, mode: mode, horizontalInset: horizontalMargin)
-                .ignoresSafeArea()
+            UIMarkdownRendererView(
+                source: source,
+                mode: mode,
+                horizontalInset: horizontalMargin,
+                onOpenNoteLink: onOpenNoteLink
+            )
+            .ignoresSafeArea()
         #else
-            NSMarkdownRendererView(source: source, mode: mode, horizontalInset: horizontalMargin)
+            NSMarkdownRendererView(
+                source: source,
+                mode: mode,
+                horizontalInset: horizontalMargin,
+                onOpenNoteLink: onOpenNoteLink
+            )
         #endif
     }
 }
@@ -32,6 +41,11 @@ struct MarkdownRendererView: View {
         let source: String
         let mode: PreviewMode
         let horizontalInset: CGFloat
+        let onOpenNoteLink: ((URL) -> Void)?
+
+        func makeCoordinator() -> LinkCoordinator {
+            LinkCoordinator(onOpenNoteLink: onOpenNoteLink)
+        }
 
         func makeUIView(context: Context) -> UITextView {
             let textView = UITextView()
@@ -40,10 +54,12 @@ struct MarkdownRendererView: View {
             textView.adjustsFontForContentSizeCategory = true
             textView.contentInsetAdjustmentBehavior = .always
             textView.alwaysBounceVertical = true
+            textView.delegate = context.coordinator
             return textView
         }
 
         func updateUIView(_ textView: UITextView, context: Context) {
+            context.coordinator.onOpenNoteLink = onOpenNoteLink
             textView.textContainerInset = UIEdgeInsets(
                 top: Self.verticalInset,
                 left: horizontalInset,
@@ -64,6 +80,25 @@ struct MarkdownRendererView: View {
         }
     }
 
+    final class LinkCoordinator: NSObject, UITextViewDelegate {
+        var onOpenNoteLink: ((URL) -> Void)?
+
+        init(onOpenNoteLink: ((URL) -> Void)?) {
+            self.onOpenNoteLink = onOpenNoteLink
+        }
+
+        func textView(
+            _ textView: UITextView,
+            shouldInteractWith URL: URL,
+            in characterRange: NSRange,
+            interaction: UITextItemInteraction
+        ) -> Bool {
+            guard URL.scheme == nil else { return true }
+            onOpenNoteLink?(URL)
+            return false
+        }
+    }
+
 #elseif canImport(AppKit)
     import AppKit
 
@@ -74,6 +109,11 @@ struct MarkdownRendererView: View {
         let source: String
         let mode: PreviewMode
         let horizontalInset: CGFloat
+        let onOpenNoteLink: ((URL) -> Void)?
+
+        func makeCoordinator() -> LinkCoordinator {
+            LinkCoordinator(onOpenNoteLink: onOpenNoteLink)
+        }
 
         func makeNSView(context: Context) -> NSScrollView {
             let scrollView = NSTextView.scrollableTextView()
@@ -83,10 +123,12 @@ struct MarkdownRendererView: View {
             textView.isSelectable = true
             textView.drawsBackground = false
             textView.textContainer?.lineFragmentPadding = 0
+            textView.delegate = context.coordinator
             return scrollView
         }
 
         func updateNSView(_ scrollView: NSScrollView, context: Context) {
+            context.coordinator.onOpenNoteLink = onOpenNoteLink
             let textView = scrollView.documentView as! NSTextView
             textView.textContainerInset = NSSize(width: horizontalInset, height: Self.verticalInset)
             switch mode {
@@ -106,6 +148,20 @@ struct MarkdownRendererView: View {
                 textView.textStorage?.setAttributedString(
                     MarkdownAttributedStringParser().parse(source))
             }
+        }
+    }
+
+    final class LinkCoordinator: NSObject, NSTextViewDelegate {
+        var onOpenNoteLink: ((URL) -> Void)?
+
+        init(onOpenNoteLink: ((URL) -> Void)?) {
+            self.onOpenNoteLink = onOpenNoteLink
+        }
+
+        func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
+            guard let url = link as? URL, url.scheme == nil else { return false }
+            onOpenNoteLink?(url)
+            return true
         }
     }
 #endif

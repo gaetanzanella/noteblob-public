@@ -72,4 +72,50 @@ struct HeadingActionHandlerTests {
         let handler = HeadingActionHandler(level: 2)
         #expect(handler.deactivate(in: ctx) == nil)
     }
+
+    // MARK: - isEnabled
+
+    @Test @MainActor
+    func isEnabledOnParagraph() {
+        let ctx = makeContext("Hello", cursor: 0)
+        #expect(HeadingActionHandler(level: 2).isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isEnabledOnExistingHeading() {
+        let ctx = makeContext("## Hello", cursor: 3)
+        #expect(HeadingActionHandler(level: 1).isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isDisabledInsideCodeBlock() {
+        let ctx = makeContext("```\ncode\n```", cursor: 6)
+        #expect(!HeadingActionHandler(level: 1).isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isDisabledOnListItem() {
+        let ctx = makeContext("- hello", cursor: 2)
+        #expect(!HeadingActionHandler(level: 1).isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isDisabledInsideBlockQuote() {
+        let ctx = makeContext("> hello", cursor: 2)
+        #expect(!HeadingActionHandler(level: 1).isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isDisabledWhenSelectionCrossesParagraphAndHeading() {
+        let ctx = makeContext("# Title\n\nBody", cursor: 2, cursorEnd: 12)
+        #expect(!HeadingActionHandler(level: 1).isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isDisabledOnMultiLineParagraphSelection() {
+        // Two paragraph lines selected — handler only edits the first line,
+        // so a multi-line selection is disabled to avoid a partial edit.
+        let ctx = makeContext("alpha\n\nbeta", cursor: 0, cursorEnd: 11)
+        #expect(!HeadingActionHandler(level: 1).isEnabled(in: ctx))
+    }
 }

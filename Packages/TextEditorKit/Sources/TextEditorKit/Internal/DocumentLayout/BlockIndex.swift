@@ -24,7 +24,7 @@ struct BlockIndex {
     }
 
     init(parsing text: String) {
-        let document = Document(parsing: text)
+        let document = Document(parsing: text, options: .documentDefault)
         var blocks: [Block] = []
 
         for child in document.children {
@@ -48,7 +48,7 @@ struct BlockIndex {
         regionStartLine: Int,
         lineDelta: Int
     ) {
-        let parsed = Document(parsing: regionText)
+        let parsed = Document(parsing: regionText, options: .documentDefault)
 
         var newBlocks: [Block] = []
         for child in parsed.children {
@@ -130,13 +130,6 @@ struct BlockIndex {
         walkInline(at: position).tokens
     }
 
-    /// Walk one block to find the source range of an inline formatting node.
-    /// Returns the column range on the line (0-based).
-    func inlineRange(at position: SourcePosition, token: MarkdownInlineToken) -> Range<Int>? {
-        guard let range = walkInline(at: position, findRangeFor: token).foundRange else { return nil }
-        return (range.lowerBound.column - 1)..<(range.upperBound.column - 1)
-    }
-
     // MARK: - Private
 
     private func blockAndOffset(forLine line: Int) -> (Block, Int)? {
@@ -147,14 +140,13 @@ struct BlockIndex {
         return (block, lineOffset)
     }
 
-    private func walkInline(at position: SourcePosition, findRangeFor token: MarkdownInlineToken? = nil) -> InlineWalker {
+    private func walkInline(at position: SourcePosition) -> InlineWalker {
         guard let (block, lineOffset) = blockAndOffset(forLine: position.line) else {
             return InlineWalker(targetLine: 0, targetColumn: 0)
         }
         var walker = InlineWalker(
             targetLine: position.line + 1 - lineOffset,
-            targetColumn: position.column + 1,
-            rangeForToken: token
+            targetColumn: position.column + 1
         )
         walker.visit(block.markup)
         return walker
@@ -169,10 +161,23 @@ extension BlockIndex {
     func affectedRegion(editLine: Int, lineCount: Int) -> (startLine: Int, endLine: Int, replaceRange: Range<Int>) {
         if let idx = blockIndex(forLine: editLine) {
             let block = blocks[idx]
+            // Edits on a boundary line can fuse or split with the adjacent
+            // block (e.g. deleting the trailing newline merges this block
+            // with the next, or typing `|` at the start of a paragraph turns
+            // it into a continuation of the previous table). Expand the
+            // affected region so the re-parse sees both blocks together.
+            var startIdx = idx
+            var endIdx = idx + 1
+            if editLine == block.lineRange.upperBound - 1, endIdx < count {
+                endIdx += 1
+            }
+            if editLine == block.lineRange.lowerBound, startIdx > 0 {
+                startIdx -= 1
+            }
             return (
-                block.lineRange.lowerBound,
-                block.lineRange.upperBound - 1,
-                idx..<(idx + 1)
+                blocks[startIdx].lineRange.lowerBound,
+                blocks[endIdx - 1].lineRange.upperBound - 1,
+                startIdx..<endIdx
             )
         }
 
@@ -241,8 +246,18 @@ private struct TokenCollector: MarkupWalker {
     }
 
     mutating func visitTable(_ table: Table) {
-        if result == nil && coversTarget(table) {
-            result = .table
+        if result == nil && coversTarget(table), let range = table.range {
+            let startLine = range.lowerBound.line - 1 + lineOffset
+            var endLine = range.upperBound.line - 1 + lineOffset
+            if range.upperBound.column == 1 && endLine > startLine {
+                endLine -= 1
+            }
+            let info = MarkdownLineToken.TableInfo(
+                headers: table.head.cells.map(\.plainText),
+                rows: table.body.rows.map { $0.cells.map(\.plainText) },
+                lineRange: startLine..<(endLine + 1)
+            )
+            result = .table(info)
         }
     }
 
@@ -264,7 +279,6 @@ private struct TokenCollector: MarkupWalker {
         case .none: checkbox = nil
         }
 
-        let itemColumn = range.lowerBound.column - 1
         let contentColumn: Int
         if let firstChild = item.children.first(where: { $0.range != nil }) {
             contentColumn = firstChild.range!.lowerBound.column - 1
@@ -278,7 +292,7 @@ private struct TokenCollector: MarkupWalker {
             marker: isOrdered ? "\(number ?? 1)." : "-",
             checkbox: checkbox,
             number: number,
-            prefixLength: contentColumn - itemColumn
+            prefixLength: contentColumn
         )
         result = .listItem(info)
     }
@@ -323,8 +337,6 @@ private struct InlineWalker: MarkupWalker {
     let targetLine: Int
     let targetColumn: Int
     var tokens: MarkdownInlineToken = []
-    var rangeForToken: MarkdownInlineToken?
-    var foundRange: SourceRange?
 
     mutating func visitStrong(_ strong: Strong) {
         collect(.bold, from: strong)
@@ -357,9 +369,6 @@ private struct InlineWalker: MarkupWalker {
     private mutating func collect(_ token: MarkdownInlineToken, from markup: Markup) {
         guard containsTarget(markup) else { return }
         tokens.insert(token)
-        if let target = rangeForToken, target.contains(token) {
-            foundRange = markup.range
-        }
     }
 
     private func containsTarget(_ markup: Markup) -> Bool {

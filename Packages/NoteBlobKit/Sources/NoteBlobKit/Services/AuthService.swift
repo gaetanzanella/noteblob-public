@@ -10,7 +10,7 @@ public final class AuthService: Sendable {
 
     public func login(token: String) async throws -> User {
         let user = try await userRepository.validate(token: token)
-        try userRepository.saveCredentials(Credentials(token: token))
+        try userRepository.saveCredentials(Credentials(token: token, login: user.login))
         return user
     }
 
@@ -20,5 +20,9 @@ public final class AuthService: Sendable {
 
     public var isAuthenticated: Bool {
         (try? userRepository.loadCredentials()) != nil
+    }
+
+    public var login: String? {
+        try? userRepository.loadCredentials()?.login
     }
 }

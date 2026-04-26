@@ -159,6 +159,43 @@ struct MarkdownDocumentLayoutTests {
         #expect(layout.lineCount == 2)
     }
 
+    /// Regression: with two adjacent tables the parser merges them into a
+    /// single block (per GFM spec). Inserting and then removing a blank line
+    /// between them must end up in the same merged-block state — not leave
+    /// the BlockIndex with two stale blocks because the incremental update
+    /// only re-parsed one side of the boundary.
+    @Test @MainActor
+    func tablesMergeAfterRoundTripBlankLineRemoval() {
+        let layout = MarkdownDocumentLayout()
+        layout.setText("|h1|\n|-|\n|x|\n|h2|\n|-|\n|y|\n")
+
+        // Insert a blank line between the two tables.
+        let blankInsertOffset = "|h1|\n|-|\n|x|\n".utf16.count
+        layout.update(
+            newText: "|h1|\n|-|\n|x|\n\n|h2|\n|-|\n|y|\n",
+            changedRange: blankInsertOffset..<blankInsertOffset,
+            replacementLength: 1
+        )
+
+        // Remove the blank line via backspace — deletes the `\n` *before* the
+        // cursor (the trailing newline of line 2, the last line of the first
+        // table block).
+        layout.update(
+            newText: "|h1|\n|-|\n|x|\n|h2|\n|-|\n|y|\n",
+            changedRange: (blankInsertOffset - 1)..<blankInsertOffset,
+            replacementLength: 0
+        )
+
+        // After the round-trip the BlockIndex should agree with a fresh parse:
+        // a single merged table covering both visual tables.
+        if case .table(let info) = layout.lineToken(at: 3) {
+            #expect(info.headers == ["h1"])
+            #expect(info.rows == [["x"], ["h2"], ["-"], ["y"]])
+        } else {
+            Issue.record("Expected merged .table token at line 3 after round-trip")
+        }
+    }
+
     @Test @MainActor
     func pasteAtBlankLineBeforeFirstBlock() {
         let layout = MarkdownDocumentLayout()
@@ -174,6 +211,58 @@ struct MarkdownDocumentLayoutTests {
 
         #expect(layout.lineToken(at: 0) == .paragraph)
         #expect(layout.lineToken(at: 1) == .heading(level: 1))
+    }
+
+    // MARK: - List item prefix length
+
+    @Test @MainActor
+    func prefixLengthForBulletItem() {
+        let layout = MarkdownDocumentLayout()
+        layout.setText("- Hello")
+        guard case .listItem(let info) = layout.lineToken(at: 0) else {
+            Issue.record("Expected listItem at line 0"); return
+        }
+        #expect(info.prefixLength == 2)
+    }
+
+    @Test @MainActor
+    func prefixLengthForTodoItem() {
+        let layout = MarkdownDocumentLayout()
+        layout.setText("- [ ] Task")
+        guard case .listItem(let info) = layout.lineToken(at: 0) else {
+            Issue.record("Expected listItem at line 0"); return
+        }
+        #expect(info.prefixLength == 6)
+    }
+
+    @Test @MainActor
+    func prefixLengthIncludesIndentationOnNestedItem() {
+        let layout = MarkdownDocumentLayout()
+        layout.setText("- Outer\n  - Inner")
+        guard case .listItem(let info) = layout.lineToken(at: 1) else {
+            Issue.record("Expected listItem at line 1"); return
+        }
+        #expect(info.prefixLength == 4)
+    }
+
+    @Test @MainActor
+    func prefixLengthIncludesIndentationOnNestedTodoItem() {
+        let layout = MarkdownDocumentLayout()
+        layout.setText("- Outer\n  - [ ] Inner")
+        guard case .listItem(let info) = layout.lineToken(at: 1) else {
+            Issue.record("Expected listItem at line 1"); return
+        }
+        #expect(info.prefixLength == 8)
+    }
+
+    @Test @MainActor
+    func prefixLengthForOrderedItem() {
+        let layout = MarkdownDocumentLayout()
+        layout.setText("1. Hello")
+        guard case .listItem(let info) = layout.lineToken(at: 0) else {
+            Issue.record("Expected listItem at line 0"); return
+        }
+        #expect(info.prefixLength == 3)
     }
 
     // MARK: - Coordinates
@@ -225,20 +314,4 @@ struct MarkdownDocumentLayoutTests {
         #expect(!tokens.contains(.bold))
     }
 
-    @Test @MainActor
-    func inlineRangeReturnsBoldNodeRange() {
-        let layout = MarkdownDocumentLayout()
-        layout.setText("Hello **world** end")
-
-        let range = layout.inlineRange(at: SourcePosition(line: 0, column: 10), token: .bold)
-        #expect(range == 6..<15)
-    }
-
-    @Test @MainActor
-    func inlineRangeReturnsNilOutsideFormatting() {
-        let layout = MarkdownDocumentLayout()
-        layout.setText("Hello **world** end")
-
-        #expect(layout.inlineRange(at: SourcePosition(line: 0, column: 2), token: .bold) == nil)
-    }
 }

@@ -33,6 +33,9 @@ public struct AccountView: View {
     private func accountSections(viewModel: AccountViewModel) -> some View {
         if viewModel.isAuthenticated {
             Section {
+                if let login = viewModel.login {
+                    Label(login, systemImage: "person.circle")
+                }
                 Button {
                     presenter.on(.logout)
                 } label: {

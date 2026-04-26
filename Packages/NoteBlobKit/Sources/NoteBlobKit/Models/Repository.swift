@@ -1,6 +1,11 @@
 import Foundation
 
-struct Repository: Sendable, Codable, Hashable {
-    let owner: String
-    let name: String
+public struct Repository: Sendable, Codable, Hashable {
+    public let owner: String
+    public let name: String
+
+    public init(owner: String, name: String) {
+        self.owner = owner
+        self.name = name
+    }
 }

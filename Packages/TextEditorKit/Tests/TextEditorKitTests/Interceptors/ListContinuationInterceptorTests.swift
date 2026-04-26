@@ -63,6 +63,32 @@ struct ListContinuationInterceptorTests {
     }
 
     @Test @MainActor
+    func removesEmptyIndentedListItem() {
+        // Empty nested item below a non-empty sibling. The sibling is needed
+        // so cmark still parses the empty trailing line as a list item.
+        // Previous line "  - " (length 4) should be classified as empty
+        // (lineLength == prefixLength) and stripped → exit list.
+        let ctx = makeNewlineContext(textBefore: "- a\n  - x\n  - ")
+        let edit = interceptor.intercept(ctx)
+
+        #expect(edit != nil)
+        #expect(edit!.changes == [.delete(10..<15)])
+        #expect(edit!.selection == 10..<10)
+    }
+
+    @Test @MainActor
+    func continuesIndentedListItem() {
+        // Non-empty nested item: Enter should continue with the same
+        // 2-space-indented "- " prefix, not be misclassified as empty.
+        let ctx = makeNewlineContext(textBefore: "- a\n  - x")
+        let edit = interceptor.intercept(ctx)
+
+        #expect(edit != nil)
+        #expect(edit!.changes == [.insert(at: 10, string: "  - ")])
+        #expect(edit!.selection == 14..<14)
+    }
+
+    @Test @MainActor
     func removesListItemWithOnlyWhitespace() {
         // "- " + some spaces + newline → should remove like empty
         let ctx = makeNewlineContext(textBefore: "-    ")

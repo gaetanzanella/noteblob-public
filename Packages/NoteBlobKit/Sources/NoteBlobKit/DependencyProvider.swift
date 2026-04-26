@@ -56,6 +56,7 @@ public final class DependencyProvider: Sendable {
             folderRepository: self.folderRepository,
             repositoryAdapter: self.repositoryAdapter,
             pullRequestAdapter: self.pullRequestAdapter,
+            searchRepositoryAdapter: GitHubSearchRepositoryAdapter(),
             eventPublisher: self.syncEventPublisher
         )
         self.llmRepository = NativeLLMAdapter()

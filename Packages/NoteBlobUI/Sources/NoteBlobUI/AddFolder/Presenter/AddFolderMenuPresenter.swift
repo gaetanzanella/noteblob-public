@@ -4,11 +4,13 @@ import NoteBlobKit
 public enum AddFolderMenuViewAction: Hashable {
     case selectLocal
     case selectGitHub
+    case selectCreateRepository
 }
 
 public enum AddFolderMenuRedirection {
     case local
     case github
+    case createRepository
     case showAuth
 }
 
@@ -42,6 +44,12 @@ public final class AddFolderMenuPresenter {
         case .selectGitHub:
             if authService.isAuthenticated {
                 onRedirection(.github)
+            } else {
+                onRedirection(.showAuth)
+            }
+        case .selectCreateRepository:
+            if authService.isAuthenticated {
+                onRedirection(.createRepository)
             } else {
                 onRedirection(.showAuth)
             }

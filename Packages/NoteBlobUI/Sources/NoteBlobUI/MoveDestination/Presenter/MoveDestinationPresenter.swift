@@ -5,6 +5,7 @@ import NoteBlobKit
 
 public enum MoveDestinationViewAction {
     case load
+    case selectFolder(Folder)
     case select(RelativePath)
     case confirm
 }
@@ -19,6 +20,13 @@ public enum MoveDestinationRedirection {
 
 struct MoveDestinationViewModel {
 
+    struct FolderChoice: Identifiable {
+        let id: String
+        let folder: Folder
+        let name: String
+        let isSelected: Bool
+    }
+
     struct Row: Identifiable {
         let id: String
         let path: RelativePath
@@ -28,7 +36,9 @@ struct MoveDestinationViewModel {
         let children: [Row]?
     }
 
-    let title: String
+    let sourceFolderName: String
+    let destinationFolderName: String
+    let folders: [FolderChoice]
     let rows: [Row]
     let isRootDisabled: Bool
     let selectedPath: RelativePath?
@@ -39,10 +49,12 @@ struct MoveDestinationViewModel {
 // MARK: - State
 
 private struct MoveDestinationState {
-    let folder: Folder
-    let currentPath: RelativePath
+    let sourceFolder: Folder
+    let sourcePath: RelativePath
     let itemPaths: [RelativePath]
     let excludedPaths: Set<String>
+    var destinationFolder: Folder
+    var availableFolders: [Folder] = []
     var tree: [FolderTreeNode] = []
     var selectedPath: RelativePath?
     var alert: AlertViewModel?
@@ -55,29 +67,45 @@ private struct MoveDestinationState {
 public final class MoveDestinationPresenter {
 
     private var state: MoveDestinationState
-    private let noteService: NoteService
+    private let folderSyncService: FolderSyncService
+    private let makeNoteService: (Folder) -> NoteService
     private let onRedirection: (MoveDestinationRedirection) -> Void
 
     public init(
         payload: MoveNavigationPayload,
-        noteService: NoteService,
+        folderSyncService: FolderSyncService,
+        makeNoteService: @escaping (Folder) -> NoteService,
         onRedirection: @escaping (MoveDestinationRedirection) -> Void
     ) {
         self.state = MoveDestinationState(
-            folder: payload.folder,
-            currentPath: payload.currentPath,
+            sourceFolder: payload.folder,
+            sourcePath: payload.currentPath,
             itemPaths: payload.itemPaths,
-            excludedPaths: Set(payload.itemPaths.map(\.value))
+            excludedPaths: Set(payload.itemPaths.map(\.value)),
+            destinationFolder: payload.folder
         )
-        self.noteService = noteService
+        self.folderSyncService = folderSyncService
+        self.makeNoteService = makeNoteService
         self.onRedirection = onRedirection
     }
 
     func viewModel() -> MoveDestinationViewModel {
-        MoveDestinationViewModel(
-            title: state.folder.name,
-            rows: mapNodes(state.tree, depth: 0),
-            isRootDisabled: state.currentPath == .root,
+        let destinationFolder = state.destinationFolder
+        let folders = state.availableFolders.map { folder in
+            MoveDestinationViewModel.FolderChoice(
+                id: folder.id,
+                folder: folder,
+                name: folder.name,
+                isSelected: folder.id == destinationFolder.id
+            )
+        }
+        let isSameFolder = destinationFolder.id == state.sourceFolder.id
+        return MoveDestinationViewModel(
+            sourceFolderName: state.sourceFolder.name,
+            destinationFolderName: destinationFolder.name,
+            folders: folders,
+            rows: mapNodes(state.tree, depth: 0, isSameFolder: isSameFolder),
+            isRootDisabled: isSameFolder && state.sourcePath == .root,
             selectedPath: state.selectedPath,
             canConfirm: state.selectedPath != nil,
             alert: state.alert
@@ -87,10 +115,18 @@ public final class MoveDestinationPresenter {
     public func on(_ action: MoveDestinationViewAction) {
         switch action {
         case .load:
-            load()
+            loadFolders()
+            loadTree()
+        case .selectFolder(let folder):
+            guard folder.id != state.destinationFolder.id else { return }
+            state.destinationFolder = folder
+            state.selectedPath = nil
+            loadTree()
         case .select(let path):
-            guard path != state.currentPath else { return }
-            guard !state.excludedPaths.contains(path.value) else { return }
+            if isSameFolder {
+                guard path != state.sourcePath else { return }
+                guard !state.excludedPaths.contains(path.value) else { return }
+            }
             state.selectedPath = path
         case .confirm:
             moveItems()
@@ -99,9 +135,22 @@ public final class MoveDestinationPresenter {
 
     // MARK: - Private
 
-    private func load() {
+    private var isSameFolder: Bool {
+        state.destinationFolder.id == state.sourceFolder.id
+    }
+
+    private func loadFolders() {
         do {
-            state.tree = try noteService.listFolderTree(in: state.folder, at: .root)
+            state.availableFolders = try folderSyncService.syncedFolders()
+        } catch {
+            state.alert = .error(error.localizedDescription)
+        }
+    }
+
+    private func loadTree() {
+        do {
+            let service = makeNoteService(state.destinationFolder)
+            state.tree = try service.listFolderTree(in: state.destinationFolder, at: .root)
         } catch {
             state.alert = .error(error.localizedDescription)
         }
@@ -109,9 +158,17 @@ public final class MoveDestinationPresenter {
 
     private func moveItems() {
         guard let destination = state.selectedPath else { return }
+        let sourceService = makeNoteService(state.sourceFolder)
         do {
             for path in state.itemPaths {
-                try noteService.moveItem(in: state.folder, at: path, to: destination)
+                if isSameFolder {
+                    try sourceService.moveItem(in: state.sourceFolder, at: path, to: destination)
+                } else {
+                    try sourceService.moveItem(
+                        from: state.sourceFolder, at: path,
+                        to: state.destinationFolder, at: destination
+                    )
+                }
             }
             onRedirection(.didMove)
         } catch {
@@ -119,17 +176,24 @@ public final class MoveDestinationPresenter {
         }
     }
 
-    private func mapNodes(_ nodes: [FolderTreeNode], depth: Int) -> [MoveDestinationViewModel.Row] {
+    private func mapNodes(
+        _ nodes: [FolderTreeNode], depth: Int, isSameFolder: Bool
+    ) -> [MoveDestinationViewModel.Row] {
         nodes
-            .filter { !state.excludedPaths.contains($0.path.value) }
+            .filter { node in
+                // Exclude self-items only when moving within the source folder.
+                !isSameFolder || !state.excludedPaths.contains(node.path.value)
+            }
             .map { node in
                 MoveDestinationViewModel.Row(
                     id: node.path.value,
                     path: node.path,
                     name: node.name,
                     depth: depth,
-                    isDisabled: node.path == state.currentPath,
-                    children: node.children.map { mapNodes($0, depth: depth + 1) }
+                    isDisabled: isSameFolder && node.path == state.sourcePath,
+                    children: node.children.map {
+                        mapNodes($0, depth: depth + 1, isSameFolder: isSameFolder)
+                    }
                 )
             }
     }

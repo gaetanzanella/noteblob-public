@@ -47,4 +47,42 @@ struct CodeBlockActionHandlerTests {
         // deactivate not yet implemented
         #expect(handler.deactivate(in: ctx) == nil)
     }
+
+    // MARK: - isEnabled
+
+    @Test @MainActor
+    func isEnabledOnParagraph() {
+        let ctx = makeContext("Hello", cursor: 0)
+        #expect(CodeBlockActionHandler().isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isEnabledInsideCodeBlock() {
+        let ctx = makeContext("```\nhello\n```", cursor: 5)
+        #expect(CodeBlockActionHandler().isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isDisabledOnHeading() {
+        let ctx = makeContext("# Hello", cursor: 2)
+        #expect(!CodeBlockActionHandler().isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isDisabledOnListItem() {
+        let ctx = makeContext("- hello", cursor: 2)
+        #expect(!CodeBlockActionHandler().isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isDisabledInsideBlockQuote() {
+        let ctx = makeContext("> hello", cursor: 2)
+        #expect(!CodeBlockActionHandler().isEnabled(in: ctx))
+    }
+
+    @Test @MainActor
+    func isDisabledOnMultiLineSelection() {
+        let ctx = makeContext("alpha\n\nbeta", cursor: 0, cursorEnd: 11)
+        #expect(!CodeBlockActionHandler().isEnabled(in: ctx))
+    }
 }
